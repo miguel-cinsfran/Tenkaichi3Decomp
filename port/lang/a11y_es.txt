@@ -521,3 +521,628 @@ dfd76cb726caaa09	, %d luchadores en pie
 22301f9513285cb5	Izquierda y derecha eligen, Intro confirma, Escape vuelve al juego
 # Back to the game
 6376cd42a8789562	De vuelta al juego
+# The settings window (F1, or Select and Start together: port/src/gs/a11y_ui.cpp): what it draws, and the words the
+# reader adds to it (button, checked, 3 of 5). "\n" in a note is where a tooltip breaks its line. A key "text|settings"
+# is for a text the game's own screens say otherwise.
+# Start|settings
+4bdfaf746f5ecd64	Menú u Options
+# Settings
+9d8b8aa2b404c2c8	Ajustes
+# Video
+85186a61e0d55bac	Video
+# Audio
+08e6bd98452e6bb9	Audio
+# UI
+09313307b5c39f7b	Interfaz
+# Controls
+83cd32b685ccc9b7	Controles
+# Cheats
+ab03f0f3851e7fad	Trucos
+# Misc
+04e610aea9079cc9	Varios
+# Accessibility
+11fdceabe7befeff	Accesibilidad
+# D-pad: move Cross / A: choose Circle / B: back L1 / R1: tab
+a764d4402a75797f	Cruceta: moverse. Cruz o A: elegir. Círculo o B: volver. L1 y R1: cambiar de pestaña.
+# Exit game
+52d5a94f25cf83b5	Salir del juego
+# Sound effects
+c9c3d8874b465902	Efectos de sonido
+# Stage sounds
+a8a3b519a8e304e7	Sonidos del escenario
+# Hits, blasts, menu sounds. Takes effect with the next sound that starts.
+944909d302eb79af	Golpes, ráfagas, sonidos del menú. Se aplica con el próximo sonido que empiece.
+# The fighters' voices in a fight and the spoken lines outside one.
+9e68408ccd5b84ca	Las voces de los luchadores en la pelea y las frases habladas fuera de ella.
+# A stage's background sound (wind, water) and its own effects.
+494d87ec8501ce08	El sonido de fondo de un escenario (viento, agua) y sus propios efectos.
+# Music follows game speed
+f0573481466cc183	La música sigue la velocidad del juego
+# When the game runs at another speed than 100%% (an online match, the Cheats tab):\noff, the music plays as it is; on, it is sped up or slowed down with the game,\nat its own pitch, as an emulator does. Spoken lines always follow the game.
+e5872e443f03541a	Cuando el juego corre a otra velocidad que 100%% (una partida en línea, la pestaña Trucos): apagado, la música suena como es; encendido, se acelera o se frena con el juego, con su propio tono, como hace un emulador. Las frases habladas siempre siguen al juego.
+# Modified game data: this build supports the original USA disc. Glitches are expected.
+d4b98c65b2db76c7	Datos del juego modificados: esta versión es para el disco original de Estados Unidos. Puede haber fallas.
+# Files of two different releases are mixed: copy all the files of the release, not only the program.
+1c93bce31132d5dc	Hay archivos de dos versiones mezclados: hay que copiar todos los archivos de la versión, no solo el programa.
+# The other player's game is a different version.
+c1428eb2d0b3d0e1	El juego del otro jugador es de otra versión.
+# The connection to the other player was lost.
+f578cf55429a0a3c	Se perdió la conexión con el otro jugador.
+# The other player left the match.
+104062d261c2c758	El otro jugador dejó la partida.
+# Update available: 0.%d.%d. F1 for the download page.
+f5ca37c8339f251d	Hay una actualización: 0.%d.%d. F1 para la página de descarga.
+# Internal resolution
+90ba62dd9afac382	Resolución interna
+# %dx (%d x %d)
+1ce7a771ffc187d5	%dx (%d por %d)
+# How finely the game is drawn. 1x is the PlayStation 2's own resolution.\nHigher is sharper and uses more video memory.
+46d59c082e8486d7	Qué tan fino se dibuja el juego. 1x es la resolución propia de la PlayStation 2. Más alto se ve más nítido y usa más memoria de video.
+# Aspect ratio
+2d9478bfee840fe6	Relación de aspecto
+# Wider than 4:3 shows more of the fight to the sides. Menus are stretched.
+012a0090b82cab3f	Más ancho que 4:3 muestra más de la pelea hacia los costados. Los menús se estiran.
+# 2D filtering
+e7ed429ead2e598d	Filtrado 2D
+# Smooth
+579c69f419b6caef	Suave
+# Sharp (console)
+437637775c5733bf	Nítido (consola)
+# How the display of a fight, the menus and text are drawn above 1x internal resolution.\nSharp: each of the PlayStation 2's pixels is a block. Smooth: as an emulator shows them.\nNo difference at 1x.
+96ef9de6023d398c	Cómo se dibujan la imagen de la pelea, los menús y el texto por encima de 1x de resolución interna. Nítido: cada píxel de la PlayStation 2 es un bloque. Suave: como los muestra un emulador. En 1x no hay diferencia.
+# Full screen
+a3d326f1be347f60	Pantalla completa
+# V-sync
+3cefd718cbcf632f	Sincronización vertical
+# Each picture waits for the display's refresh. Turn it on if the picture tears.\nOff is the default: it adds a little delay.
+3748dbe6be4f283b	Cada imagen espera el refresco de la pantalla. Conviene encenderla si la imagen se corta. Viene apagada: agrega un poco de retraso.
+# Skip pictures instead of slowing down
+b59ca2a5722bcaa1	Saltar imágenes en vez de ir más lento
+# When this machine cannot show a picture in time, the game normally runs slower.\nWith this on it stays at full speed and leaves pictures out instead (choppier,\nnot slower). It helps where the graphics chip is the slow part. On by default.
+07f81e083afde4d9	Cuando esta máquina no llega a mostrar una imagen a tiempo, el juego normalmente va más lento. Con esto encendido sigue a velocidad completa y deja imágenes afuera (se ve a saltos, pero no más lento). Ayuda cuando lo lento es el chip gráfico. Viene encendido.
+# Display
+1125d159f7e64df5	Pantalla
+# Chosen by the desktop
+4a3cf07e3c7caa7f	La que elige el escritorio
+# Takes effect the next time the game starts.
+11734bb1c3e8e609	Se aplica la próxima vez que arranque el juego.
+# Renderer
+ff70f823592e1d9e	Motor gráfico
+# Takes effect the next time the game starts. Both draw the same picture; Vulkan is faster.\nIf the chosen one cannot start, the game tries the other.
+414b19847f82f5c2	Se aplica la próxima vez que arranque el juego. Los dos dibujan la misma imagen; Vulkan es más rápido. Si el elegido no puede arrancar, el juego prueba con el otro.
+# Running now: %s. %s from the next start.
+8bae188eb41efa96	Ahora se usa %s. %s desde el próximo arranque.
+# Smooth motion
+65162b19ddeba80f	Movimiento suave
+# Off (30, as the console)
+05050bfa76ebeeaa	Apagado (30, como la consola)
+# %d pictures a second
+4668c75bd4588fd8	%d imágenes por segundo
+# Experimental. The game computes a fight 30 times a second. With this, more pictures are\ndrawn between each two. The fight itself does not change, and neither does online play.\nThe newest picture reaches the screen later: 17 ms at 60, 25 ms at 120, 29 ms at 240.\nChoose what your screen can show. F9 switches it off and on.
+645459d844a73e59	Experimental. El juego calcula la pelea 30 veces por segundo. Con esto se dibujan más imágenes entre cada dos. La pelea en sí no cambia, y el juego en línea tampoco. La imagen más nueva llega más tarde a la pantalla: 17 ms a 60, 25 ms a 120, 29 ms a 240. Conviene elegir lo que la pantalla puede mostrar. F9 lo apaga y lo prende.
+# Show frame rate, and the connection in an online match
+02752815b5601365	Mostrar las imágenes por segundo, y la conexión en una partida en línea
+# Texture pack (%d textures)
+4c3182317ab42a5f	Paquete de texturas (%d texturas)
+# Replacement textures from the folder "textures" next to the game.
+9578219bbb18b095	Texturas de reemplazo de la carpeta "textures" junto al juego.
+# Texture pack (none found)
+1f2f3919a4ba647e	Paquete de texturas (no se encontró ninguno)
+# Put a pack's files (PCSX2 naming, .dds or .png) into a folder "textures" next to the game.
+e30851cf50542963	Los archivos de un paquete (con los nombres de PCSX2, .dds o .png) van en una carpeta "textures" junto al juego.
+# Outline
+19daf2f26c19543d	Contorno
+# The black line around the fighters.
+b741d6ff07f9cfe7	La línea negra alrededor de los luchadores.
+# See-through tint
+d1332a30ccd5b0a1	Tinte de transparencia
+# The tint that shows a fighter behind scenery.
+77a7dcb8529e37b7	El tinte que muestra a un luchador detrás del escenario.
+# Depth tint
+6870cf107b1ba8ef	Tinte de profundidad
+# The haze that colours distant things.
+18d4f3d9194af786	La bruma que colorea lo lejano.
+# Glare and glow
+da33a328fe1dd5ee	Destellos y brillo
+# The bloom around bright things and the sky's glare.
+d3a771af5b71458b	El resplandor alrededor de lo brillante y el destello del cielo.
+# Distance blur
+8569af9564aa3c07	Desenfoque de distancia
+# The soft focus on distant scenery.
+83097961823bfb09	El foco suave sobre el escenario lejano.
+# Movement blur
+8f6b372ed9d1aa51	Desenfoque de movimiento
+# The blur of the scenery while the view turns or moves fast.
+eeb2436172a2c442	El desenfoque del escenario mientras la vista gira o se mueve rápido.
+# Glow strength
+a02daa7aa0019b9d	Intensidad del brillo
+# 100%% is what the PlayStation 2 draws; the default here is 60%%.
+c64a62af1478794f	100%% es lo que dibuja la PlayStation 2; acá viene en 60%%.
+# Check for updates
+e6a8976fdb8243a6	Buscar actualizaciones
+# an update is available
+a5b5f58184d58d6a	hay una actualización
+# Once per start, ask GitHub for the number of the newest release and say so if it is newer\nthan this one. Nothing is downloaded: the settings window then has a button to the page.
+8c445b0c902b86f0	Una vez por arranque, le pregunta a GitHub el número de la versión más nueva y avisa si es más nueva que esta. No se descarga nada: la ventana de ajustes muestra entonces un botón a la página.
+# Skip logos
+5b9f5adb5325cfbe	Saltar los logos
+# Start without the publisher and developer logos. From the next start of the game.
+0dd6acc983b7a6df	Arrancar sin los logos de la distribuidora y la desarrolladora. Desde el próximo arranque del juego.
+# Skip intro video
+96d525169882ba23	Saltar el video de introducción
+# Start without the opening movie. From the next start of the game.
+7a2cf2db388a97cc	Arrancar sin el video de apertura. Desde el próximo arranque del juego.
+# Skip copyright page
+c89bf436b1d7bc8e	Saltar la página de derechos de autor
+# The page of legal text shown for five seconds before the title screen, every time.
+c2959de21d9aca49	La página de texto legal que aparece cinco segundos antes de la pantalla de título, cada vez.
+# HUD Style
+c26c6e7c38e9d177	Estilo de los indicadores
+# At the screen's edges
+d55e1d083d6fabcd	En los bordes de la pantalla
+# At the edges, long health bars
+1954c21b29bc73df	En los bordes, barras de vida largas
+# In the middle, as in 4:3
+c6068d95af29987e	En el medio, como en 4:3
+# Where a fight's health bars and gauges sit in a picture wider than 4:3.\nLong health bars: the bars reach from the edges to the timer.\nIn the middle: the original 4:3 arrangement, next to the timer.
+c3438d592c6281b3	Dónde van las barras de vida y los medidores de la pelea en una imagen más ancha que 4:3. Barras de vida largas: las barras van desde los bordes hasta el reloj. En el medio: la disposición original de 4:3, junto al reloj.
+# Menus in 4:3
+00d949248c869da5	Menús en 4:3
+# In a picture wider than 4:3, show the menus at their own shape with black at the sides\ninstead of stretched to the width. Fights keep the wide picture.
+06f92807a3794fcc	En una imagen más ancha que 4:3, muestra los menús con su forma propia y negro a los costados, en vez de estirados a lo ancho. Las peleas mantienen la imagen ancha.
+# Side bars
+89d5caba21740738	Barras laterales
+# Black
+5e3cb80d43a34044	Negro
+# Border
+9370dc6afa716b57	Borde
+# What fills the sides where the picture is narrower than the window:\na 4:3 picture, or the menus with "Menus in 4:3", in a wide window.\nYour own: a folder "bars" next to the game with trim.png (the strip along the\npicture, kept in proportion) and fill.png (stretched over the rest). Read at start.
+877db6d8491b1788	Qué llena los costados donde la imagen es más angosta que la ventana: una imagen 4:3, o los menús con "Menús en 4:3", en una ventana ancha. Las propias: una carpeta "bars" junto al juego con trim.png (la franja a lo largo de la imagen, en proporción) y fill.png (estirada sobre el resto). Se leen al arrancar.
+# Player 1
+3817fd31d1f7a5c3	Jugador 1
+# Player 2
+3817fe31d1f7a776	Jugador 2
+# None
+669b18c6d2d9c95b	Ninguno
+# Controller %d (not connected)
+a9bf71fb7098addb	Control %d (no conectado)
+# Reset to defaults
+07733503b383d73d	Volver a los valores predeterminados
+# Choose a binding, then press the new key or button. Esc keeps it, Delete clears it;
+0a666fee1ea295ba	Elegir una asignación y después apretar la tecla o el botón nuevo. Escape la deja como estaba, Suprimir la borra;
+# with a controller, press nothing for five seconds to keep it.
+61162b15a6e7ace3	con un control, no apretar nada durante cinco segundos la deja como estaba.
+# Action
+a442044b586ec8bf	Acción
+# Keyboard
+868a566fb9603774	Teclado
+# press a key...
+5e2bf38e0838c0a2	apretar una tecla...
+# press a button...
+ce2c623925f30d15	apretar un botón...
+# Return
+b3848440dbfb823f	Intro
+# Escape
+1b61db587d3e3f26	Escape
+# Backspace
+d64445ead33533cc	Retroceso
+# Tab
+6ce0ce19e201b66c	Tabulador
+# Space
+032cd9f1245d3645	Espacio
+# Up
+09313a07b5c3ab60	Flecha arriba
+# Down
+032c13736048bf35	Flecha abajo
+# Left
+a5c371b4bb75e590	Flecha izquierda
+# Right
+366991b9c9287765	Flecha derecha
+# Insert
+5ada999b33ccc808	Insertar
+# Delete
+dc673e73b5c13aea	Suprimir
+# Home
+6abb1cd87fe0114e	Inicio
+# End
+d8f923198e0c5c6a	Fin
+# PageUp
+c205408d70cf40cb	Re Pág
+# PageDown
+952c26cac2583cfe	Av Pág
+# CapsLock
+9609363a16cbc30f	Bloq Mayús
+# Left Shift
+9da4c3651aedc0d4	Shift izquierdo
+# Right Shift
+00b40dcd4f741955	Shift derecho
+# Left Ctrl
+d1eb221ce945d159	Control izquierdo
+# Right Ctrl
+2680b02bd0d887ae	Control derecho
+# Left Alt
+9017c81baf4b218b	Alt izquierdo
+# Right Alt
+de90ae8fbced4e02	Alt derecho
+# Keypad Enter
+400011ab2e9ea7b7	Intro del teclado numérico
+# Keypad %s
+93c21747658a9bf3	%s del teclado numérico
+# Unbound
+e7a38a6492965c7a	Sin asignar
+# Open this window
+e6d32a9d7ed5e589	Abrir esta ventana
+# START + SELECT
+41051aa04f79ff2e	Start y Select
+# Left stick
+b25219a8f9810d90	Palanca izquierda
+# Right stick
+6b51ef85c1861879	Palanca derecha
+# A / Cross
+c0667f99734eb971	A o Cruz
+# B / Circle
+cabcf2d14c40ef14	B o Círculo
+# X / Square
+2e35f67018106c49	X o Cuadrado
+# Y / Triangle
+3aaa109bb5e9a537	Y o Triángulo
+# Back / Select
+fcccea84b34adf09	Vista o Create
+# Guide
+7bf3b283b3f22c4b	Botón central
+# Left stick click
+0fc6e24df57b6008	Palanca izquierda presionada
+# Right stick click
+f3d2ac6c5153794d	Palanca derecha presionada
+# Left shoulder
+f5ca0828d577d5d8	LB o L1
+# Right shoulder
+126966c01b6315bb	RB o R1
+# Left trigger
+fccc7f9c106bcfcc	LT o L2
+# Right trigger
+bb73052d8a394a61	RT o R2
+# D-pad up
+397e326391128634	Cruceta arriba
+# D-pad down
+8a580d442a3221a1	Cruceta abajo
+# D-pad left
+5f85fb8aba9b553c	Cruceta izquierda
+# D-pad right
+956ec51e27d1cc69	Cruceta derecha
+# Cross
+1f152e00912ee85b	Cruz
+# Circle
+14c54ca33d0f3ea9	Círculo
+# Square
+6641c258b0b51b26	Cuadrado
+# Triangle
+debf6287e31d18e5	Triángulo
+# START
+9a047e085465f87f	Start
+# SELECT
+7da73cc0f538da0d	Select
+# Left stick up
+e990b116cf8eb91d	Palanca izquierda arriba
+# Left stick down
+bbcced4d6cdf257c	Palanca izquierda abajo
+# Left stick left
+c6af4f8f0338d171	Palanca izquierda a la izquierda
+# Left stick right
+07bc962c78512bd2	Palanca izquierda a la derecha
+# Right stick up
+7cce31bcad412bce	Palanca derecha arriba
+# Right stick down
+e6ffb2e467085897	Palanca derecha abajo
+# Right stick left
+47fe40a30ee75d02	Palanca derecha a la izquierda
+# Right stick right
+a71ba1c903464f0f	Palanca derecha a la derecha
+# Misc 1
+ca40a2ea0c2c9f6e	Botón extra 1
+# Right paddle 1
+6b6d50ef4e468384	Paleta derecha 1
+# Left paddle 1
+62364958b9da4f6b	Paleta izquierda 1
+# Right paddle 2
+6b6d53ef4e46889d	Paleta derecha 2
+# Left paddle 2
+62364a58b9da511e	Paleta izquierda 2
+# Touchpad
+afc1860858a391ad	Panel táctil
+# Button %d
+6259403452f49502	Botón %d
+# Clashes: Square counts as a direction
+34c8f02e1cc90a09	Choques: Cuadrado cuenta como dirección
+# In a clash of two beams or two rushes the game counts newly pressed directions:\nturning the stick, or tapping the d-pad. With this on, each press of Square\ncounts as one of them while the clash lasts, as a tap of the d-pad does.\nIt only changes your own pad, so it can be used in online play.
+26be0927a8370ed3	En un choque de dos rayos o de dos ráfagas de golpes, el juego cuenta las direcciones recién apretadas: girar la palanca o tocar la cruceta. Con esto encendido, cada vez que se aprieta Cuadrado cuenta como una de ellas mientras dura el choque, igual que un toque de la cruceta. Solo cambia el propio control, así que se puede usar en línea.
+# per press
+98744a69a7a13513	por pulsación
+# What one press of Square is worth. The d-pad has four buttons to tap in turn and the\nstick four directions a turn; Square is one button. 1 is a single d-pad tap.\nNever more than one a frame, which is the most the game counts from any pad.
+a92b3c36ee753c20	Cuánto vale una pulsación de Cuadrado. La cruceta tiene cuatro botones para tocar por turno y la palanca cuatro direcciones por vuelta; Cuadrado es un solo botón. 1 es un solo toque de la cruceta. Nunca más de uno por fotograma, que es lo máximo que el juego cuenta de cualquier control.
+# Game speed
+1f5244ede517c9e0	Velocidad del juego
+# How fast the game runs outside online play (the sound keeps its pitch). 100%% is the game's own;\n114%% is what competitive play uses. An online match never uses this value:\nits speed is the host's or the queue's.
+7879abccb5079624	Qué tan rápido corre el juego fuera del juego en línea (el sonido mantiene su tono). 100%% es la velocidad propia del juego; 114%% es la que usa el juego competitivo. Una partida en línea nunca usa este valor: su velocidad es la del anfitrión o la de la cola.
+# Reset
+255857544a9d5ec0	Restablecer
+# Unlock everything
+cd8e020e14d739b2	Desbloquear todo
+# Unlock everything...
+9818ad30e31e19e0	Desbloquear todo...
+# Unlock everything?
+1f870aed69b6ca97	¿Desbloquear todo?
+# Unlock everything: all characters, stages, music and items, and the largest amount of Zenni. This is a debug function the game's developers left in.
+7db90e8a507455c9	Desbloquear todo: todos los personajes, escenarios, música y objetos, y la mayor cantidad de Zenni. Es una función de depuración que dejaron los desarrolladores del juego.
+# It also empties your records list, and it becomes permanent the next time the game saves. Use it after your save has been loaded (from the main menu on).
+2c8c44bb284fb44b	También vacía la lista de récords, y queda permanente la próxima vez que el juego guarde. Conviene usarlo después de cargar la partida guardada (desde el menú principal en adelante).
+# Your records list will be emptied. This cannot be undone once the game saves.
+b427e2633bae2b32	Se va a vaciar la lista de récords. No se puede deshacer una vez que el juego guarde.
+# Unlock
+5d303fbc88281c15	Desbloquear
+# Done.
+7301570d0bb8fc6d	Listo.
+# Update available: 0.%d.%d (this is 0.%d.%d).
+ab28896fc936f256	Hay una actualización: 0.%d.%d (esta es la 0.%d.%d).
+# Download page
+a9d3dadcf3070dd0	Página de descarga
+# Opens the release page in your browser. To update, copy the new files over the old ones.
+a70d995b0ce96b01	Abre la página de la versión en el navegador. Para actualizar, se copian los archivos nuevos encima de los viejos.
+# Update available. Online servers are unreachable until you update.
+a5c07fe62f84a4c4	Hay una actualización. Los servidores en línea no se pueden usar hasta actualizar.
+# You have 0.%d.%d; 0.%d.%d or newer is needed. github.com/z3xox/Tenkaichi3Decomp/releases
+5773c3a4e9e1a430	Esta es la 0.%d.%d; hace falta la 0.%d.%d o una más nueva. github.com/z3xox/Tenkaichi3Decomp/releases
+# Update available: release 0.%d.%d.
+bd284e615714cc36	Hay una actualización: la versión 0.%d.%d.
+# Fight a player on another computer. One of you hosts, the other joins with the host's address.
+609666a2583e6ba2	Pelear con un jugador en otra computadora. Uno es el anfitrión y el otro se une con la dirección del anfitrión.
+# Player name
+ef41eca34f0a8cc3	Nombre del jugador
+# Quick match
+accaa2f371f3dc2d	Partida rápida
+# Be matched with whoever is searching the same queue. All quick matches have no time limit and run at %d%% speed.
+5a106f44b6c4f1db	Empareja con quien esté buscando en la misma cola. Todas las partidas rápidas son sin límite de tiempo y corren al %d%% de velocidad.
+# %s (%d searching)
+b6d45c2ca02b555f	%s (%d buscando)
+# Search for a match
+440cf4fe026813b4	Buscar partida
+# Search again
+db01b5a0631865f1	Buscar de nuevo
+# Found a player. Connecting...
+b8ac719ecc24cf41	Se encontró a un jugador. Conectando...
+# Searching for a player in this queue...
+4d5cc51eea09d66c	Buscando a un jugador en esta cola...
+# Searching for %d:%02d more. Leave the window open.
+4c63cd91dd67d287	Se sigue buscando %d:%02d más. La ventana tiene que quedar abierta.
+# The two games could not reach each other, directly or through the relay. Search again for another player.
+ffd34303df8ce528	Los dos juegos no pudieron conectarse, ni directo ni por el relé. Hay que buscar de nuevo a otro jugador.
+# The other player's game is a different version. Search again.
+7cea69b8ddbae1e7	El juego del otro jugador es de otra versión. Hay que buscar de nuevo.
+# Nobody was searching this queue in the last three minutes. Search again, or try another queue.
+b65fe9d67a7723a5	Nadie buscó en esta cola en los últimos tres minutos. Se puede buscar de nuevo o probar otra cola.
+# Host
+6b05f9d8801fc14f	Anfitrión
+# Join
+6c6bf3ea2ad3d219	Unirse
+# Use a room code (no port forwarding needed)
+3e45b7ff3f428342	Usar un código de sala (no hace falta abrir puertos)
+# You get a short code to tell the other player, and the two games find each other through a\nsmall matchmaking service. Works with most home routers. Without it you host on a port,\nwhich must be reachable from the other player (port forwarding or a virtual network).
+a2aaef1e2a01084e	Se recibe un código corto para pasarle al otro jugador, y los dos juegos se encuentran a través de un pequeño servicio de emparejamiento. Funciona con la mayoría de los routers de casa. Sin código, se hospeda en un puerto, al que el otro jugador tiene que poder llegar (redirección de puertos o una red virtual).
+# Port
+b354dc19a7208a86	Puerto
+# Rollback
+85866424ecc3b35d	Rollback
+# With rollback your own moves come out at once and the game corrects itself when the\nother player's buttons arrive. More frames cope with a slower connection and cost\nmore processor time. Off: both games wait for each other every frame.
+759a679c1a327b7f	Con rollback, los movimientos propios salen al instante y el juego se corrige cuando llegan los botones del otro jugador. Más fotogramas aguantan una conexión más lenta y gastan más procesador. Apagado: los dos juegos se esperan en cada fotograma.
+# Off (wait for each other)
+ad4019c12653a4fa	Apagado (se esperan uno al otro)
+# Up to %d frames
+19e5070c24e050d4	Hasta %d fotogramas
+# Input delay
+73cca9856d8295d4	Retraso de entrada
+# Automatic (from the connection)
+d29f3610b5cfbb08	Automático (según la conexión)
+# 1 frame
+cfa7c22be79f5df1	1 fotograma
+# %d frames
+227046a11f759bb6	%d fotogramas
+# How long after a press your own move comes out. A slow connection needs more, or the game\nhas to guess too far ahead and stutters. Automatic measures the connection when the match\nstarts: 1 frame on a good one, more on a slow one.
+17d424261eec7ba2	Cuánto tarda en salir el movimiento propio después de apretar. Una conexión lenta necesita más; si no, el juego tiene que adivinar demasiado hacia adelante y se traba. Automático mide la conexión al empezar la partida: 1 fotograma si es buena, más si es lenta.
+# Battle
+842625237cdf6677	Batalla
+# Single battle
+53940627d93b5089	Batalla individual
+# Team battle
+a5a7a972a614856e	Batalla por equipos
+# DP battle (%d DP)
+8858eb97529326a7	Batalla DP (%d DP)
+# Time limit
+ee9a7629bb40808f	Límite de tiempo
+# %d seconds
+72dd561eaad8cd39	%d segundos
+# No limit
+fd0dcab6acf65c1d	Sin límite
+# How fast the match runs, for both players; the sound keeps its pitch.\n100%% is the game's own speed. %d%% is the competitive standard, and what\nquick matches run at.\nWith a player on 0.1.29 only 100%% and 120%% are possible, with an older\nrelease only 100%%.
+fae2b395844e6454	Qué tan rápido corre la partida, para los dos jugadores; el sonido mantiene su tono. 100%% es la velocidad propia del juego. %d%% es el estándar competitivo, y la de las partidas rápidas. Con un jugador en la 0.1.29 solo se puede 100%% o 120%%; con una versión más vieja, solo 100%%.
+# The host's choices apply to both players.
+99f48ba3c5881140	Lo que elige el anfitrión vale para los dos jugadores.
+# The two games connect to each other directly when they can, as in most online fighting
+ebd59fa27a6f2632	Los dos juegos se conectan directo entre sí cuando pueden, como en la mayoría de los juegos de pelea
+# games: a player who inspects their own network traffic can see the other's address.
+209d4327f6b71c7c	en línea: quien mire su propio tráfico de red puede ver la dirección del otro.
+# Room code
+5ee9d8dda2190c73	Código de sala
+# Room code:
+6067c99a708fe00b	Código de sala:
+# Paste
+d374c80e17e18808	Pegar
+# or, without a code, the host's address and port:
+9478f4e5de28fe8b	o, sin código, la dirección y el puerto del anfitrión:
+# Host's address
+61f70825c2b1c791	Dirección del anfitrión
+# Copy
+3687049d1af562c4	Copiar
+# Copied
+f4de3bfbfaca12e5	Copiado
+# Copy the code, to paste it to the other player.
+8141dbe7a9a932f0	Copiar el código, para pegárselo al otro jugador.
+# Tell the other player this code. Waiting for them to join...
+150590fd57a0a1fc	Este código es para el otro jugador. Esperando a que se una...
+# The other player has joined. Connecting...
+f23aa902c77a3b82	El otro jugador se unió. Conectando...
+# Found the room. Connecting to the host...
+00845cec6544f717	Se encontró la sala. Conectando con el anfitrión...
+# Getting a room code...
+033d88f5a68d9282	Pidiendo un código de sala...
+# Looking for the room...
+9b5749e6b774a919	Buscando la sala...
+# Looking for %s...
+9d08c57d98096ae3	Buscando %s...
+# Waiting for the other player on port %s...
+e65d35ff15110a65	Esperando al otro jugador en el puerto %s...
+# A player with a different version of the game is trying to join. Both need the same release.
+71bc3b81fcdec700	Un jugador con otra versión del juego intenta unirse. Los dos necesitan la misma versión.
+# The two games could not reach each other, directly or through the relay. Hosting on a port (with port forwarding or a virtual network such as Tailscale) still works.
+4c4281b3bccf5687	Los dos juegos no pudieron conectarse, ni directo ni por el relé. Hospedar en un puerto (con redirección de puertos o una red virtual como Tailscale) sigue funcionando.
+# Host a match
+3a614116986a0b45	Crear una partida
+# Join the match
+37e0c8f5c568846b	Unirse a la partida
+# Back
+c16e00a7a8b2fde2	Volver
+# The host's game is a different version. Both players need the same release.
+9a6bbb60511c43a5	El juego del anfitrión es de otra versión. Los dos jugadores necesitan la misma versión.
+# That port cannot be used (another program has it?).
+ce3b22cd9afd4cb6	Ese puerto no se puede usar (¿lo tiene otro programa?).
+# That address is not known.
+33ea33084cc79e98	Esa dirección no se conoce.
+# When you are connected the game switches to the match: both players get the same roster,
+e0704d9e0c35bdf4	Al conectarse, el juego pasa a la partida: los dos jugadores tienen los mismos personajes,
+# with everything unlocked, and your own save is left alone. Leaving the match brings you
+1673d9538b64e454	con todo desbloqueado, y la partida guardada propia no se toca. Al salir de la partida se vuelve
+# back to where you were. The host's controls also work the menus.
+bdae693f8670e0ae	a donde se estaba. Los controles del anfitrión también manejan los menús.
+# Sounds and voices of the accessibility. The screen reader keeps its own volume: see the last button.
+814673eebd1d3b2b	Sonidos y voces de la accesibilidad. El lector de pantalla tiene su propio volumen: lo explica el último botón.
+# Screen reader volume
+74d8db8d07159c36	Volumen del lector
+# Cue sounds
+17a1621c0e524514	Sonidos de aviso
+# The short sounds of a fight: a transformation or the Ultimate Blast within reach. 0 turns them off.
+7f34a60bebd78eca	Los sonidos cortos de la pelea: una transformación o el Ultimate Blast al alcance. En 0 se apagan.
+# Game voices in menus
+d5360e2a1f46eb59	Voces del juego en los menús
+# The game's spoken lines outside a fight, under the screen reader.
+9f0a269ea772471f	Las frases habladas del juego fuera de la pelea, por debajo del lector de pantalla.
+# Game voices in fights
+4af8f945ffef08c4	Voces del juego en la pelea
+# The fighters' voices during a fight, under the screen reader.
+d0e741cae2d37bfe	Las voces de los luchadores durante la pelea, por debajo del lector de pantalla.
+# The screen reader's volume is set in the screen reader itself. With NVDA: NVDA+Control+left or right arrow until Volume, then NVDA+Control+up or down arrow.
+94b70106439a5d5d	El volumen del lector de pantalla se cambia en el propio lector. Con NVDA: NVDA+Control+flecha izquierda o derecha hasta Volumen, y después NVDA+Control+flecha arriba o abajo.
+# button
+1aa9c45c0f9ef371	botón
+# check box
+0115e901ce05ab72	casilla de verificación
+# radio button
+4c076840ae3e1598	botón de opción
+# slider
+15ee00ede8e0841c	deslizador
+# edit
+3a6129602c615ff1	edición
+# combo box
+3cf89d0892dc5594	cuadro combinado
+# tab
+56d7ae194448aa0c	pestaña
+# column header
+486f936d668b9f00	encabezado de columna
+# table
+77203729b376a83f	tabla
+# group
+dc57e42946f6e08c	grupo
+# checked
+a01d5521a3fab666	marcado
+# not checked
+878eb0536a44064f	no marcado
+# half checked
+1fb86b827a104655	parcialmente marcado
+# selected
+03c44f5a1b0581d4	seleccionado
+# collapsed
+df0ed011e7a2c72e	contraído
+# expanded
+cbcd2d25940f8ef8	expandido
+# blank
+4b31e8abbc4aafc1	en blanco
+# %d of %d
+76040e19318c910e	%d de %d
+# unavailable
+833996a486514c49	no disponible
+# With the right stick: left lowers, right raises
+3d0d9d9feb4be5ac	Con la palanca derecha: a la izquierda baja, a la derecha sube
+# Cross or A to enter, Circle or B to leave
+bd617780668f7a69	Cruz o A para entrar, Círculo o B para salir
+# not selected
+84a89aa5da625be7	no seleccionado
+# Low input lag (experimental)
+adb4b23a080e7b66	Poco retraso de entrada (experimental)
+# The game reads the controller, computes, and then waits before the picture is shown:\nabout 33 ms in a fight. With this on the wait comes first, so the picture follows\nyour press by the few milliseconds the machine needs. The game itself is unchanged.\nNot used online or with in-between pictures. Off by default: on a machine that\ncannot keep up it may stutter where the original order would not.
+59bd57732ced67a0	El juego lee el control, calcula y después espera antes de mostrar la imagen: unos 33 ms en la pelea. Con esto encendido la espera va primero, así que la imagen llega apenas los pocos milisegundos que necesita la máquina después de apretar. El juego en sí no cambia. No se usa en línea ni con Movimiento suave. Viene apagado: en una máquina que no da abasto puede trabarse donde el orden original no se trabaría.
+# Online chat
+1e2f4778f30ec060	Chat en línea
+# Text with the other player of an online match. Tab opens a line (setting key_chat), Enter sends it,\nEsc puts it away; while it is typed the keyboard does not play, a controller does. Off: no lines\nare shown or sent. A player without it sees nothing.
+3a16473c41bc7ce8	Mensajes de texto con el otro jugador de una partida en línea. Tab abre una línea (ajuste key_chat), Intro la envía y Escape la guarda; mientras se escribe, el teclado no juega, pero el control sí. Apagado: no se muestra ni se envía nada. Quien no lo tenga encendido no ve nada.
+# Open online chat
+ef517faf1a0d1e22	Abrir el chat en línea
+# Menu font
+0917d2082e4183ef	Letra de los menús
+# Original uses the game's sprites. Other fonts replace matching menu labels immediately.\nDecorative lettering keeps its original artwork.
+943de4c11cdab671	Original usa los dibujos del propio juego. Las otras letras reemplazan al instante las etiquetas de menú que coinciden. Las letras decorativas mantienen su dibujo original.
+# Dialogue / UI font
+dd68f6004779d7bd	Letra de los diálogos y la interfaz
+# Replace the shared font used by dialogue, subtitles and ordinary UI text.\nOriginal keeps the game's glyphs. Text placement, colors, shadows and icons are preserved.
+1f4635055fd501dc	Reemplaza la letra común de los diálogos, los subtítulos y el texto normal de la interfaz. Original mantiene los caracteres del juego. Se conservan la posición del texto, los colores, las sombras y los íconos.
+# 4:3 (original)
+ebf5afcacc338b92	4:3 (original)
+# Sticks, triggers and vibration
+cb8942f1f0ac8caa	Palancas, gatillos y vibración
+# no controller
+bd5510baa31799ae	sin control
+# Deadzone
+29c155e2ddcb9745	Zona muerta
+# Original
+06f6c6f99db6b552	Original
+# How far the stick has to be moved before the game is told anything (the shaded middle).\nOriginal: the game's own, 39%% for left / right and for up / down separately, a square.\n0%% to 90%%: a round one of that size instead; from its edge the value grows evenly\nto full at full tilt, and the stick counts as a direction half way between the two.\nThe white dot is the stick, the ring what the game is given; after the stick's name,\nthe direction the game takes it for. Choose a size that covers where the dot rests\nwhen the stick is let go.
+4253e86a893fea2c	Cuánto hay que mover la palanca antes de que el juego reciba algo (el centro sombreado). Original: la del propio juego, 39%% para izquierda y derecha y para arriba y abajo por separado, un cuadrado. De 0%% a 90%%: en cambio, una redonda de ese tamaño; desde su borde el valor crece parejo hasta el máximo con la palanca a fondo, y la palanca cuenta como una dirección a mitad de camino entre las dos. El punto blanco es la palanca y el anillo, lo que recibe el juego; después del nombre de la palanca, la dirección que entiende el juego. Conviene elegir un tamaño que cubra dónde queda el punto al soltar la palanca.
+# Left stick: up
+e4b0d58fa6495f37	Palanca izquierda: arriba
+# Left stick: down
+310f1c84b277ccf2	Palanca izquierda: abajo
+# Left stick: left
+89661e42332b9bd7	Palanca izquierda: a la izquierda
+# Left stick: right
+64aa37af564a1b48	Palanca izquierda: a la derecha
+# Right stick: up
+0437e9e33c92e5ae	Palanca derecha: arriba
+# Right stick: down
+2d8980cf2f689f77	Palanca derecha: abajo
+# Right stick: left
+8b210e8dd462c7e2	Palanca derecha: a la izquierda
+# Right stick: right
+3f649f606123ee6f	Palanca derecha: a la derecha
+# stick %s %s
+ff837395f60b7b3b	palanca %s %s
+# game %s %s
+054c1df92e5b647b	juego %s %s
+# %d%% pressed
+abc7552c52441634	%d%% apretado
+# A trigger counts as pressed from %d%% on. The game is told pressed or not, nothing between.
+8ffad3f6293a5a99	Un gatillo cuenta como apretado desde el %d%%. El juego recibe apretado o no apretado, nada en el medio.
+# Strength
+82c21acdbcd6e830	Intensidad
+# Test
+2474e7fb1aec9f05	Probar
+# Half a second of both motors at this strength.
+f936bac16267e05f	Medio segundo de los dos motores con esta intensidad.
+# (this controller has none)
+620d7dc99fdce2bc	(este control no tiene)

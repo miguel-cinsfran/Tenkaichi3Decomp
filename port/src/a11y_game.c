@@ -39,6 +39,7 @@ extern void PortA11y_Note(const char *text);
 extern int PortA11y_Utf8(char *out, int cap, const uint16_t *str);
 extern int gPortResim; /* gs/state.c: blanks being run again */
 extern int Port_Setting(const char *name, int def); /* plat_settings.c */
+extern void Port_SettingSave(const char *name, int value);
 extern void Port_AudioRefresh(void);                /* gs/snd_adx.c: the streams take their volume again */
 
 /* include/menu/menu_a.h: MenuProgress; the modes are in docs/systems/menu_overlay.md */
@@ -3116,6 +3117,34 @@ int PortA11y_VoicePercent(const void *player) {
         return in_battle() ? sFightVoices : sMenuVoices;
     }
     return -1;
+}
+
+/* For the settings window (gs/a11y_ui.cpp): the voices' percent in menus (fight 0) or in a battle (fight 1), and
+   setting it, which stores it (Port_SettingsWrite saves it) and gives the playing streams their volume again. */
+int PortA11y_Voices(int fight) {
+    int menu, v;
+
+    if (sOn) {
+        return fight ? sFightVoices : sMenuVoices;
+    }
+    v = Port_Setting("a11y_menu_voices", 50);
+    menu = v < 0 ? 0 : v > 100 ? 100 : v;
+    if (!fight) {
+        return menu;
+    }
+    v = Port_Setting("a11y_fight_voices", menu);
+    return v < 0 ? 0 : v > 100 ? 100 : v;
+}
+
+void PortA11y_SetVoices(int fight, int percent) {
+    percent = percent < 0 ? 0 : percent > 100 ? 100 : percent;
+    if (fight) {
+        sFightVoices = percent;
+    } else {
+        sMenuVoices = percent;
+    }
+    Port_SettingSave(fight ? "a11y_fight_voices" : "a11y_menu_voices", percent);
+    Port_AudioRefresh();
 }
 
 /* 1: a line first shown at blank `first` is what a voice says (it started a little before or since). */

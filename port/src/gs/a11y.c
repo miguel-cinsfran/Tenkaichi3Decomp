@@ -62,6 +62,7 @@
 
 extern int Port_Setting(const char *name, int def); /* plat_settings.c */
 extern void Port_SettingText(const char *name, const char *def, char *out, int size);
+extern void Port_SettingSave(const char *name, int value);
 
 /* fopen for a path in UTF-8 (SDL's: the program's folder), which the C library of Windows would take for one in the
    system's code page: a folder with letters outside it would not open. */
@@ -657,6 +658,21 @@ int PortA11y_Begin(void) {
     }
     sFrame++;
     return sOn;
+}
+
+/* 1 while the accessibility is on (for the settings window, gs/a11y_ui.cpp: 0 until the game's first blank). */
+int PortA11y_On(void) {
+    return sOn;
+}
+
+/* The cues' volume, percent (a11y_cue_volume); setting it stores it, and Port_SettingsWrite saves it. */
+int PortA11y_CueVolume(void) {
+    return sCueVolume;
+}
+
+void PortA11y_SetCueVolume(int percent) {
+    sCueVolume = percent < 0 ? 0 : percent > 100 ? 100 : percent;
+    Port_SettingSave("a11y_cue_volume", sCueVolume);
 }
 
 /* Says a message (UTF-8). flags: A11Y_INTERRUPT, or 0 to queue it after the one before. */

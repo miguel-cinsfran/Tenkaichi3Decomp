@@ -240,11 +240,11 @@ def main():
     imgui = ROOT / "port/third_party/imgui"
     for f in sorted(imgui.glob("*.cpp")) + sorted((ROOT / "port/src/gs").glob("*.cpp")):
         o = OBJ / ("cxx_" + f.stem + ".o")
-        if f.parent == imgui and o.exists() and o.stat().st_mtime > f.stat().st_mtime:
+        if f.parent == imgui and o.exists() and o.stat().st_mtime > max(f.stat().st_mtime, pathlib.Path(__file__).stat().st_mtime):
             objs.append(str(o))
             continue
         r = run(["g++", "-m32", "-std=c++17", "-c", "-O2", "-g", "-fno-pic", "-msse2", "-mfpmath=sse", "-fno-exceptions",
-                            "-fno-rtti", "-w", f"-I{imgui}", f"-I{ROOT / 'port/src/gs'}", f"-I{gen}", str(f), "-o", str(o)], cwd=ROOT,
+                            "-fno-rtti", "-w", "-DIMGUI_ENABLE_TEST_ENGINE", f"-I{imgui}", f"-I{ROOT / 'port/src/gs'}", f"-I{gen}", str(f), "-o", str(o)], cwd=ROOT,
                            capture_output=True, text=True)
         if r.returncode:
             print("FAILED", f.name, "\n".join(l for l in r.stderr.splitlines() if "error" in l)[:600])

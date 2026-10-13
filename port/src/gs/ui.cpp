@@ -85,6 +85,7 @@ int Port_LobbyPoll(void);
 void Port_LobbyCancel(void);
 void Port_LobbyLaunch(void);
 }
+void A11yUi_Init(void); int A11yUi_Tabs(void); void A11yUi_Tab(void); // a11y_ui.cpp: the window read aloud, its own tab
 static bool sReady, sOpen;
 static bool sNet;                              // the open window is the online screen (Dragon Net Battle), not the settings
 static int sForceTab = -1;                     // BT3_UI_OPEN=<tab>: open at start on that tab (testing)
@@ -361,6 +362,7 @@ int Ui_Init(SDL_Window *window, SDL_GPUDevice *device, void *gl_context, const c
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    A11yUi_Init();
     ImGuiIO &io = ImGui::GetIO();
     io.IniFilename = NULL; // no window-layout file next to the game
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad; // (a controller opens it too: START + SELECT)
@@ -1670,7 +1672,7 @@ static void build(void) {
         open = false;
     }
     if (sForceTab < 0 && (pad_pressed(ImGuiKey_GamepadL1) || pad_pressed(ImGuiKey_GamepadR1))) {
-        sForceTab = (sTab + (ImGui::IsKeyPressed(ImGuiKey_GamepadL1, false) ? 6 : 1)) % 7;
+        sForceTab = (sTab + (ImGui::IsKeyPressed(ImGuiKey_GamepadL1, false) ? 6 + A11yUi_Tabs() : 1)) % (7 + A11yUi_Tabs());
         sPadTab = true;
     }
     ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -1731,6 +1733,7 @@ static void build(void) {
             }
             if (tab("Cheats", 5)) { cheats_tab(); ImGui::EndTabItem(); }
             if (tab("Misc", 6)) { misc_tab(); ImGui::EndTabItem(); }
+            if (A11yUi_Tabs() && tab("Accessibility", 7)) { A11yUi_Tab(); ImGui::EndTabItem(); }
             ImGui::EndTabBar();
         }
         ImGui::EndChild();
