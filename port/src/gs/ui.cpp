@@ -1360,7 +1360,8 @@ static void ui_tab(PortVideo &v) {
 }
 
 extern "C" int gPortMusicFollows; // snd_adx.c: 1 = looping music is sped up or slowed down with the game
-extern "C" int gPortStereoStreams; // snd_adx.c: 1 = a stereo file the game pans to one place keeps its two sides
+extern "C" int gPortStereoStreams; // snd_adx.c: 1 = a stereo song the game pans to one place keeps its two sides
+extern "C" int Port_StereoStreams(void); // (the setting, read the first time)
 
 static void audio_tab(PortVideo &v) {
     ImGui::SliderInt("Music", &v.music, 0, 200, "%d%%", ImGuiSliderFlags_AlwaysClamp);
@@ -1382,7 +1383,7 @@ static void audio_tab(PortVideo &v) {
                               "at its own pitch, as an emulator does. Spoken lines always follow the game.");
     }
     {
-        bool stereo = gPortStereoStreams != 0;
+        bool stereo = Port_StereoStreams() != 0;
         if (ImGui::Checkbox("Stereo music", &stereo)) {
             gPortStereoStreams = stereo;
             Port_SettingSave("stereo_streams", stereo);
