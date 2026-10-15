@@ -1199,3 +1199,57 @@ aa616bdfe454ecb3	bloqueada
 31fa549485b45a6e	Cruceta: moverse. %s: elegir. %s: volver. %s y %s: cambiar de pestaña.
 # %s to enter, %s to leave
 27ad3f4bdbd7ba42	%s para entrar, %s para salir
+
+# The fight's alerts (port/src/a11y_fight.c) and their settings in the Accessibility tab.
+# Screen reader
+c313cdd7bb03cf4c	Lector de pantalla
+# Sound and screen reader
+7ac93c2b7103798a	Sonido y lector de pantalla
+# Distance to the rival
+0e9e46ad57ffa284	Distancia al rival
+# A tick that repeats faster as the rival comes nearer, higher when the rival is above\nyou and lower when below; two ticks within close range. By the screen reader: near,\nmiddle distance or far, and above or below, when it changes.
+48641fcbe1733771	Un tic que se repite más rápido cuanto más cerca está el rival, más agudo si el rival está más arriba y más grave si está más abajo; dos tics en el rango de cuerpo a cuerpo. Con el lector de pantalla: cerca, a media distancia o lejos, y arriba o abajo, cuando cambia.
+# Edge of the stage
+7f592895fb267078	Borde del escenario
+# A hum while you are near the stage's wall (where the game shows it), faster the nearer;\nanother under the stage's ceiling, and two knocks out of the World Tournament ring.
+367e127605328713	Un zumbido mientras estás cerca de la pared del escenario (donde el juego la muestra), más rápido cuanto más cerca; otro bajo el techo del escenario, y dos golpes fuera del ring del Torneo mundial.
+# Health
+baf0a7c417e388af	Vida
+# Two beeps when a player's health falls under three quarters, a half and a quarter, louder the\nless is left; under a quarter, yours again every three seconds. Player 1 left, player 2 right.
+150d1e8c8ab862f3	Dos pitidos cuando la vida de un jugador baja de tres cuartos, de la mitad y de un cuarto, más fuertes cuanta menos queda; bajo un cuarto, la tuya otra vez cada tres segundos. Jugador 1 a la izquierda, jugador 2 a la derecha.
+# Transformation and Ultimate Blast
+3fbcd38e0e468fe6	Transformación y ataque definitivo
+# When one more transformation or the Ultimate Blast comes within reach.
+155a8ca3a5af7b73	Cuando queda al alcance una transformación más o el ataque definitivo.
+# Gauges on request
+262f74e8463ad90f	Estado a pedido
+# The touchpad click or F3 / F4 in a fight: two beeps, louder the less health is left,\nor health, ki and blast said by the screen reader, or both.
+a5794d87896424a6	El clic del panel táctil o F3 y F4 en una pelea: dos pitidos, más fuertes cuanta menos vida queda, o la vida, el ki y el blast dichos por el lector de pantalla, o las dos cosas.
+# The accessibility's sounds in a fight: the alerts below that are told by a sound. 0 turns them off.
+541e45ef6c70280f	Los sonidos de la accesibilidad en una pelea: los avisos de abajo que se dan con un sonido. 0 los apaga.
+# Player %d can take %d transformations
+f2f6b68162023e95	Jugador %d puede tomar %d transformaciones
+# Player %d can transform
+48ea991247aa596b	Jugador %d puede transformarse
+# Player %d can fire the Ultimate Blast
+8d8e6da21e16cc03	Jugador %d puede lanzar el ataque definitivo
+# Rival close
+63801193e9b558ff	Rival cerca
+# Rival at middle distance
+3c125ef58661d9ac	Rival a media distancia
+# Rival far
+7c377db5dbaa192a	Rival lejos
+# , above
+4025880906d625f6	, arriba
+# , below
+0f7db67b4bdf3666	, abajo
+# Out of the ring
+3cdb99bb986f9397	Fuera del ring
+# Ceiling of the stage
+9ae710c1318c9d0c	Techo del escenario
+# Player %d: health in danger, %d percent
+38ba09476d9c1647	Jugador %d: vida en peligro, %d por ciento
+# Player %d: health %d percent
+5f9405b67a6c158b	Jugador %d: vida al %d por ciento
+# Off|settings
+84945b537ccbbda7	Apagado

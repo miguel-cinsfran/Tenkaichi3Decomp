@@ -42,6 +42,8 @@ void PortA11y_SetVoices(int fight, int percent);
 void Port_SettingsWrite(void); // plat_settings.c
 void Ui_Toggle(void); // ui.cpp: opens or closes the window (F1)
 const char *PortA11y_PadSourceName(int src); // a11y_pad.c: a controller button by the name of the one in use
+int PortA11y_AlertMode(int alert); // a11y_fight.c: how a fight alert is told, 0 off, 1 sound, 2 voice, 3 both
+void PortA11y_SetAlertMode(int alert, int mode);
 }
 
 #define A11Y_INTERRUPT 1 // (the same in a11y.c)
@@ -1584,7 +1586,7 @@ void A11yUi_Tab(void) {
     if (ImGui::IsItemDeactivatedAfterEdit()) {
         Port_SettingsWrite();
     }
-    ImGui::SetItemTooltip("The short sounds of a fight: a transformation or the Ultimate Blast within reach. 0 turns them off.");
+    ImGui::SetItemTooltip("The accessibility's sounds in a fight: the alerts below that are told by a sound. 0 turns them off.");
     v = PortA11y_Voices(0);
     if (ImGui::SliderInt("Game voices in menus", &v, 0, 100, "%d%%", ImGuiSliderFlags_AlwaysClamp)) {
         PortA11y_SetVoices(0, v);
@@ -1601,6 +1603,33 @@ void A11yUi_Tab(void) {
         Port_SettingsWrite();
     }
     ImGui::SetItemTooltip("The fighters' voices during a fight, under the screen reader.");
+    ImGui::Spacing();
+    // The fight's alerts (a11y_fight.c), each a slider over its ways of telling, so that the right stick changes it
+    // as it does the volumes; the gauges asked for have no "Off" (they are only told when asked).
+    static const char *const kWays[] = {"Off", "Sound", "Screen reader", "Sound and screen reader"};
+    static const struct { const char *label, *tip; } kAlerts[] = {
+        {"Distance to the rival", "A tick that repeats faster as the rival comes nearer, higher when the rival is above\n"
+                                  "you and lower when below; two ticks within close range. By the screen reader: near,\n"
+                                  "middle distance or far, and above or below, when it changes."},
+        {"Edge of the stage", "A hum while you are near the stage's wall (where the game shows it), faster the nearer;\n"
+                              "another under the stage's ceiling, and two knocks out of the World Tournament ring."},
+        {"Health", "Two beeps when a player's health falls under three quarters, a half and a quarter, louder the\n"
+                   "less is left; under a quarter, yours again every three seconds. Player 1 left, player 2 right."},
+        {"Transformation and Ultimate Blast", "When one more transformation or the Ultimate Blast comes within reach."},
+        {"Gauges on request", "The touchpad click or F3 / F4 in a fight: two beeps, louder the less health is left,\n"
+                              "or health, ki and blast said by the screen reader, or both."},
+    };
+    for (int i = 0; i < (int)(sizeof(kAlerts) / sizeof(kAlerts[0])); i++) {
+        int lo = i == 4 ? 1 : 0;
+        v = PortA11y_AlertMode(i);
+        if (ImGui::SliderInt(kAlerts[i].label, &v, lo, 3, kWays[v < lo ? lo : v > 3 ? 3 : v], ImGuiSliderFlags_AlwaysClamp)) {
+            PortA11y_SetAlertMode(i, v);
+        }
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
+            Port_SettingsWrite();
+        }
+        ImGui::SetItemTooltip("%s", kAlerts[i].tip);
+    }
     ImGui::Spacing();
     // (A button, not a line of text: a line after the last item would be said with the next one, Exit game)
     static const char kReader[] = "The screen reader's volume is set in the screen reader itself. With NVDA: NVDA+Control+left "

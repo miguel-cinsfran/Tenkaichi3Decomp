@@ -3458,6 +3458,9 @@ extern int BtlCharApi_GetHp(int objId), BtlCharApi_GetHpMax(int objId), BtlCharA
     BtlCharApi_GetBlast(int objId), BtlCharApi_GetBlastMax(int objId);
 extern int BtlSide_IsPoweredUp(int side), BtlSide_CountAlive(int side);
 extern int PortA11y_GaugesAsked(int fight); /* gs/a11y.c */
+extern int PortA11y_GaugesQuery(int side);  /* a11y_fight.c: the beeps; 2 set when the gauges are said too */
+extern void PortA11y_PowerCue(int side, int kind, int count); /* a11y_fight.c: the cue as a sound, the voice or both */
+extern void PortA11y_FightAlerts(int fight); /* a11y_fight.c: distance, the stage's edge, health */
 
 #define GAUGE_HP_BAR 10000  /* docs/systems/hud.md: health per bar */
 #define GAUGE_KI_BAR 20000  /* ki per bar, five bars */
@@ -3496,6 +3499,9 @@ static void fight_gauges(void) {
     if (!fight) {
         PortA11y_Note("gauges asked for outside a fight");
         return;
+    }
+    if (!(PortA11y_GaugesQuery(side) & 2)) {
+        return; /* (told by the beeps alone: a11y_fight.c) */
     }
     gauge_units(hp, sizeof(hp), BtlCharApi_GetHp(side), GAUGE_HP_BAR);
     gauge_units(hpMax, sizeof(hpMax), BtlCharApi_GetHpMax(side), GAUGE_HP_BAR);
@@ -3592,7 +3598,7 @@ static void fight_cues(void) {
                                                                        : "cue: player %d can fire the Ultimate Blast",
                              side + 1, now);
                     PortA11y_Note(note);
-                    PortA11y_Cue(side, kind);
+                    PortA11y_PowerCue(side, kind, now);
                 }
             }
         }
@@ -3645,4 +3651,5 @@ void PortA11y_GameTick(void) {
     shown_text();
     fight_gauges();
     fight_cues();
+    PortA11y_FightAlerts(fighting() && btl_menu_shown() == NULL);
 }
