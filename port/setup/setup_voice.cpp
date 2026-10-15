@@ -97,37 +97,48 @@ static PrismBackend *try_backend(PrismContext *ctx, uint64_t id) {
     return b;
 }
 
-// The game's settings file (port/src/plat_settings.c): `name=number` and `name="text"` lines, the last one of a name
-// counted. Returns false when there is no such setting.
-static bool setting(const std::string &root, const char *name, std::string &value) {
+// The game's settings file (port/src/plat_settings.c, load): lines `name="text"` (one character at least) and
+// `name=number` (as sscanf's %d reads it: spaces, a sign, digits), two kinds the game keeps apart (Port_SettingText,
+// Port_Setting): `text` asks for the first. The last line of the name that reads as that kind counts; a line that does
+// not is left out, as the game leaves it. Returns false when no line of the name reads as that kind.
+static bool setting(const std::string &root, const char *name, bool text, std::string &value) {
     const char *env = getenv("BT3_SETTINGS");
     std::string path = env == NULL ? root + "bt3_settings.txt" : env;
     size_t n = 0, len = strlen(name);
-    char *text = env != NULL && env[0] == '\0' ? NULL : (char *)SDL_LoadFile(path.c_str(), &n);
+    char *file = env != NULL && env[0] == '\0' ? NULL : (char *)SDL_LoadFile(path.c_str(), &n);
     bool found = false;
 
-    for (char *line = text; line != NULL && *line != '\0';) {
+    for (char *line = file; line != NULL && *line != '\0';) {
         char *end = strchr(line, '\n');
-        while (*line == ' ' || *line == '\t') {
+        std::string got;
+        while (*line == ' ' || *line == '\t' || *line == '\r') {
             line++;
         }
         if (strncmp(line, name, len) == 0 && line[len] == '=') {
             const char *v = line + len + 1;
-            value.clear();
             if (*v == '"') {
-                for (v++; *v != '\0' && *v != '"' && *v != '\n' && *v != '\r'; v++) {
-                    value += *v;
+                for (v++; text && *v != '\0' && *v != '"' && *v != '\n' && got.size() < 63; v++) {
+                    got += *v;
                 }
-            } else {
-                for (; *v == '-' || (*v >= '0' && *v <= '9'); v++) {
-                    value += *v;
+            } else if (!text) {
+                while (*v == ' ' || *v == '\t') {
+                    v++;
+                }
+                const char *digits = *v == '-' || *v == '+' ? v + 1 : v;
+                if (*digits >= '0' && *digits <= '9') {
+                    for (got = *v == '-' ? "-" : ""; *digits >= '0' && *digits <= '9'; digits++) {
+                        got += *digits;
+                    }
                 }
             }
-            found = true;
+            if (!got.empty()) {
+                value = got;
+                found = true;
+            }
         }
         line = end != NULL ? end + 1 : NULL;
     }
-    SDL_free(text);
+    SDL_free(file);
     return found;
 }
 
@@ -146,7 +157,7 @@ static std::string lang_code(const char *code) {
 
 static std::string language(const std::string &root) {
     std::string code = lang_code(getenv("BT3_A11Y_LANG")), saved;
-    if (getenv("BT3_A11Y_LANG") == NULL && setting(root, "a11y_lang", saved) && !saved.empty()) {
+    if (getenv("BT3_A11Y_LANG") == NULL && setting(root, "a11y_lang", true, saved) && !saved.empty()) {
         code = lang_code(saved.c_str());
     } else if (getenv("BT3_A11Y_LANG") == NULL) {
         int n = 0;
@@ -192,7 +203,7 @@ void Voice_Start(const std::string &root) {
         load_lines(root + "a11y_" + lang + "_own.txt"); // (the player's own first: they win)
         load_lines(root + "a11y_" + lang + ".txt");
     }
-    if ((getenv("BT3_A11Y") != NULL && strcmp(getenv("BT3_A11Y"), "0") == 0) || (setting(root, "a11y", on) && atoi(on.c_str()) == 0)) {
+    if ((getenv("BT3_A11Y") != NULL && strcmp(getenv("BT3_A11Y"), "0") == 0) || (setting(root, "a11y", false, on) && atoi(on.c_str()) == 0)) {
         return; // (switched off for the game: off here too)
     }
     if (!load_prism(root)) {
@@ -234,30 +245,35 @@ const char *Voice_Tr(const char *en) {
     return it != sLines.end() ? it->second.c_str() : en;
 }
 
-// The printf conversions of a text, in order ("%d", "%s"; "%%" is none), as the game's same_conversions sees them.
-static std::string conversions(const char *s) {
-    std::string out;
-    for (; *s != '\0'; s++) {
-        if (*s != '%') {
-            continue;
+// 1: a and b have the same printf conversions in the same order, each the same whole spec and one of cdiouxXs: the
+// game's same_conversions (port/src/gs/a11y.c), so that a line the game would not use is not used here either.
+static bool same_conversions(const char *a, const char *b) {
+    auto next = [](const char *s) -> const char * { // the next conversion from s on ("%%" is none), or NULL
+        for (; (s = strchr(s, '%')) != NULL; s += 2) {
+            if (s[1] != '%') {
+                return s;
+            }
         }
-        if (s[1] == '%') {
-            s++;
-            continue;
+        return NULL;
+    };
+    for (;;) {
+        a = next(a);
+        b = next(b);
+        if (a == NULL || b == NULL) {
+            return a == b;
         }
-        for (s++; *s != '\0' && strchr("-+ #0123456789.lhzjt", *s) != NULL; s++) {
+        size_t n = 1 + strspn(a + 1, "-+ #0123456789.hlz");
+        if (a[n] == '\0' || strchr("cdiouxXs", a[n]) == NULL || strncmp(a, b, n + 1) != 0) {
+            return false;
         }
-        if (*s == '\0') {
-            return out + '?';
-        }
-        out += *s;
+        a += n + 1;
+        b += n + 1;
     }
-    return out;
 }
 
 const char *Voice_TrFormat(const char *en) {
     const char *line = Voice_Tr(en);
-    return line != en && conversions(line) == conversions(en) ? line : en; // (a line that does not match is not used)
+    return line != en && same_conversions(en, line) ? line : en; // (a line that does not match is not used)
 }
 
 std::vector<std::string> Voice_FindIsos(const std::string &root) {

@@ -139,7 +139,8 @@ def take_prism(out, lic):
     shipped: the build stops. Without BT3_PRISM nothing changes, and the reader stays off until the player puts the
     library there; that is the ordinary release, which must not speak to a player who did not ask for it (with the
     library there and no screen reader running, Prism speaks through the system's voice).
-    Linux: Prism's Linux release has no libprism.so, so the Linux archive never carries one."""
+    Windows only for now: the Linux archive does not take Prism's libprism.so (prism-linux-x64.zip has one, in
+    dynamic/release/lib), so on Linux the player puts it next to the program."""
     given = os.environ.get("BT3_PRISM")
     if not given:
         return

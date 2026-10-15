@@ -5,7 +5,7 @@ To install the game:
 2. Extract the zip: right-click it, "Extract All", then "Extract".
 3. Go into the Tenkaichi3Decomp folder and open Tenkaichi3Decomp-setup.
 
-The setup finds the image by itself, installs the game in a minute or two, tells you how it goes through your screen reader and opens the game at the end. If it says it found no image, copy the .iso file into the Tenkaichi3Decomp folder and press Enter.
+The setup finds the image by itself, installs the game in a minute or two, tells you how it goes through your screen reader and opens the game at the end. If it says it found no image, copy the .iso file into the Tenkaichi3Decomp folder with the setup still open: it finds it by itself once the copy has ended.
 
 To play later, open Tenkaichi3Decomp. Opening the game before it is installed opens the setup.
 

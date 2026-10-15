@@ -1279,8 +1279,8 @@ e9d2ba88828dcb2e	Copiando los archivos del juego. Esta es la parte larga.
 9e12afc6039b692d	%d por ciento
 # Found your disc image, %s. Installing the game: it takes a minute or two.
 ed4851122a97141f	Encontré tu imagen de disco, %s. Instalando el juego: tarda uno o dos minutos.
-# No disc image was found. Copy your disc image of Dragon Ball Z Budokai Tenkaichi 3, the file that ends in .iso, into the same folder as this program, then press Enter. Escape closes.
-4ac3f638f940365f	No encontré la imagen de disco. Copia tu imagen de disco de Dragon Ball Z Budokai Tenkaichi 3, el archivo que termina en .iso, en la misma carpeta que este programa, y después pulsa Enter. Escape cierra.
+# No disc image was found. Copy your disc image of Dragon Ball Z Budokai Tenkaichi 3, the file that ends in .iso, into the same folder as this program: it is found there by itself once it is copied. Escape closes.
+8a1f579a68bd3876	No encontré la imagen de disco. Copia tu imagen de disco de Dragon Ball Z Budokai Tenkaichi 3, el archivo que termina en .iso, en la misma carpeta que este programa: la encuentro sola cuando termine de copiarse. Escape cierra.
 # Ready: the game is installed. It opens now.
 334cd5c7c9dc5707	Listo: el juego está instalado. Ahora se abre.
 # The game is installed already. It opens now; Escape stays here.

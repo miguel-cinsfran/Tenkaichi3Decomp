@@ -423,8 +423,12 @@ void work(std::string root, std::string path) {
             return text;
         };
         say("@fail");
-        if (!s.detail.empty()) {
-            say("@detail " + line(s.detail));
+        if (!s.detail.empty()) { // (one line, taken as it is: a Windows path's backslashes stay)
+            std::string detail = s.detail;
+            for (auto &c : detail) {
+                c = c == '\r' || c == '\n' ? ' ' : c;
+            }
+            say("@detail " + detail);
         }
         say("@stopped " + line(s.why));
     }

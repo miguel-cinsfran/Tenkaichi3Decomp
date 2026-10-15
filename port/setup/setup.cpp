@@ -11,11 +11,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <algorithm>
 #include <mutex>
 #include <string>
 #include <vector>
 #include <SDL3/SDL.h>
 #ifndef _WIN32
+#include <errno.h>
 #include <fcntl.h>
 #include <sys/file.h>
 #include <unistd.h>
@@ -78,6 +80,10 @@ static int sSaidPercent;                      // the last quarter of the copy th
 static Page sShownPage;                       // the page whose change was last told (page_changed)
 static bool sChosen;                          // sIso was chosen by the player (argument, Browse, a drop, typed), not found
 static bool sStopAsked;                       // Cancel was pressed in this run: whatever ends it, the game does not open
+// The most telling failure of the folder's images in this round (look_for_disc starts one), said at its end in place of
+// the last image's, which can be any other file of the folder; and the images that failed the disc step already.
+static struct Best { int rank = -1; std::string error, detail, iso; } sBest;
+static std::vector<std::pair<std::string, Sint64>> sBad;
 static const ImVec4 kAccent(0.96f, 0.55f, 0.13f, 1.0f), kGreen(0.36f, 0.80f, 0.45f, 1.0f), kRed(0.93f, 0.36f, 0.33f, 1.0f),
     kDim(0.60f, 0.63f, 0.70f, 1.0f);
 
@@ -139,6 +145,10 @@ static void start_install() {
     sShownPage = PAGE_RUN; // (a run that fails before a frame has shown it still changes the page: told)
     sStopAsked = false;
     sErrorDetail.clear();
+    if (sChosen) {
+        sCandidates.clear(); // (the player's own choice: no image of the folder is tried after it)
+        sBest = Best();
+    }
     const char *args[8];
     SDL_PropertiesID props = SDL_CreateProperties();
     std::string script = sRoot + "install.py";
@@ -256,7 +266,7 @@ static void event(const std::string &line) {
             sMissing.push_back(m);
         }
     } else if (kind == "detail") {
-        sErrorDetail = text;
+        sErrorDetail = line.substr(sp + 1); // (as it came: a Windows path's "\\n" is no line break)
     } else if (kind == "stopped") {
         sError = text;
     } else if (kind == "done") {
@@ -387,7 +397,9 @@ static void page_pick() {
     ImGui::TextWrapped("Choose your disc image of Dragon Ball Z: Budokai Tenkaichi 3, USA release (SLUS-21678), as an .iso file. "
                        "The game's data is taken from it and stays on this computer. %s",
                        sRelease ? "Nothing is downloaded." : "Nothing is downloaded except one small tool.");
-    ImGui::TextWrapped("Or put it next to the zip you unpacked, or in this program's folder, and press Enter: it is found there by itself.");
+    if (sRelease) {
+        ImGui::TextWrapped("Or put it next to the zip you unpacked, or in this program's folder: it is found there by itself.");
+    }
     ImGui::Dummy(ImVec2(0.0f, 10.0f));
     ImGui::TextUnformatted("Disc image");
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 130.0f);
@@ -608,18 +620,94 @@ static bool start_found(bool cut = true) {
     return true;
 }
 
-static void look_for_disc() {
-    sCandidates = Voice_FindIsos(sRoot);
-    if (!start_found()) {
-        sPage = PAGE_PICK;
-        Voice_Say(Voice_Tr("No disc image was found. Copy your disc image of Dragon Ball Z Budokai Tenkaichi 3, the file that ends "
-                           "in .iso, into the same folder as this program, then press Enter. Escape closes."), true);
-    }
-}
-
 // 1 when the last run stopped at its first step, reading the disc image: the image was not the game's (or not one).
 static bool disc_failed() {
     return sRelease && !sRows.empty() && sRows[0].state == FAILED;
+}
+
+static const char kNoDisc[] = "No disc image was found. Copy your disc image of Dragon Ball Z Budokai Tenkaichi 3, the file "
+                              "that ends in .iso, into the same folder as this program: it is found there by itself once it "
+                              "is copied. Escape closes.";
+
+static Sint64 file_size(const std::string &path) {
+    SDL_PathInfo info;
+    return SDL_GetPathInfo(path.c_str(), &info) && info.type == SDL_PATHTYPE_FILE ? (Sint64)info.size : -1;
+}
+
+static bool known_bad(const std::string &path) {
+    for (auto &b : sBad) {
+        if (b.first == path && b.second == file_size(path)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// The folder's images, tried in turn; those that failed already last (the player may have put the right one there).
+static void look_for_disc() {
+    sBest = Best();
+    sCandidates = Voice_FindIsos(sRoot);
+    std::stable_partition(sCandidates.begin(), sCandidates.end(), [](const std::string &p) { return !known_bad(p); });
+    if (!start_found()) {
+        sPage = PAGE_PICK;
+        Voice_Say(Voice_Tr(kNoDisc), true);
+    }
+}
+
+// While the setup waits for a disc image (the first page, or after the folder's images were not the game's), the
+// folder is looked at every two seconds, and an image that was not there, or not finished, is installed by itself
+// once its copy has ended: the same size and time at two looks in a row, and it opens for reading (Windows refuses
+// that while the copy still writes it). Images that failed already are left out. A child is told to copy the image
+// there, and Enter in the file window opens the image instead of reaching this one.
+static Uint64 sWatchAt;
+
+static void watch_folder() {
+    static std::vector<std::pair<std::string, std::pair<Sint64, SDL_Time>>> seen;
+    bool waiting = sPage == PAGE_PICK || (sPage == PAGE_FAILED && disc_failed());
+    std::vector<std::pair<std::string, std::pair<Sint64, SDL_Time>>> now;
+    std::vector<std::string> ready;
+
+    if (!sRelease || !waiting || (sChosen && file_exists(sIso)) || SDL_GetTicks() < sWatchAt) {
+        return;
+    }
+    sWatchAt = SDL_GetTicks() + 2000;
+    for (auto &path : Voice_FindIsos(sRoot)) {
+        SDL_PathInfo info;
+        if (!SDL_GetPathInfo(path.c_str(), &info) || info.size == 0 || known_bad(path)) {
+            continue;
+        }
+        now.push_back({path, {(Sint64)info.size, info.modify_time}});
+        for (auto &before : seen) {
+            SDL_IOStream *io;
+            if (before.first == path && before.second == now.back().second && (io = SDL_IOFromFile(path.c_str(), "rb")) != NULL) {
+                SDL_CloseIO(io);
+                ready.push_back(path);
+            }
+        }
+    }
+    seen = now;
+    if (!ready.empty()) {
+        seen.clear();
+        sBest = Best();
+        sCandidates = ready;
+        start_found();
+    }
+}
+
+static void say_failure(bool cut) {
+    std::string said = std::string(Voice_Tr("The setup stopped.")) + " " + Voice_Tr(sError.c_str()) + " " +
+                       Voice_Tr(sRelease ? "Press Enter to try again, or Escape to close." : "Escape closes.");
+    Voice_Say(said, cut);
+}
+
+// Where the setup is, said again when its window comes back to the front (a second setup brings it there).
+static void say_page() {
+    switch (sPage) {
+    case PAGE_PICK: Voice_Say(Voice_Tr(sRelease ? kNoDisc : "Escape closes."), false); break;
+    case PAGE_RUN: Voice_Say(Voice_Tr("Still installing. Please wait."), false); break;
+    case PAGE_DONE: Voice_Say(Voice_Tr("Ready: the game is installed. Enter opens it, Escape closes."), false); break;
+    case PAGE_FAILED: say_failure(false); break;
+    }
 }
 
 // What is said when the page changes; and where the next disc image of the folder is tried.
@@ -633,16 +721,29 @@ static void page_changed(Page from) {
                                             : "The game is installed already. It opens now; Escape stays here."), true);
         sAutoPlayAt = SDL_GetTicks() + (from == PAGE_RUN ? 2500 : 4000);
     } else if (sPage == PAGE_FAILED) {
-        // only an image that is not the game's makes the next one of the folder worth a try: a full disk or a
-        // self-test that could not run would fail the same with any image, and its reason has to be heard
-        if (disc_failed() && !sStopAsked && !sCandidates.empty()) {
-            Voice_Say(Voice_Tr("That disc image is not the right one; trying the next one."), true);
-            start_found(false);
-            return;
+        if (disc_failed() && !sStopAsked) {
+            // the more an error says the image is the game's (its programs changed, then cut short, then another
+            // PS2 game, then no disc image at all), the more it helps the player: that one is said at the end
+            int rank = sError.find("checksums") != std::string::npos ? 3 : sError.find("read to its end") != std::string::npos ? 2
+                     : sError.find("USA release") != std::string::npos ? 1 : 0;
+            sBad.push_back({sIso, file_size(sIso)});
+            if (rank > sBest.rank) {
+                sBest = {rank, sError, sErrorDetail, sIso};
+            }
+            // only an image that is not the game's makes the next one of the folder worth a try: a full disk or a
+            // self-test that could not run would fail the same with any image, and its reason has to be heard
+            if (!sCandidates.empty()) {
+                Voice_Say(Voice_Tr("That disc image is not the right one; trying the next one."), true);
+                start_found(false);
+                return;
+            }
+            if (sBest.iso != sIso) {
+                sError = sBest.error;
+                sErrorDetail = sBest.detail;
+                SDL_strlcpy(sIso, sBest.iso.c_str(), sizeof(sIso));
+            }
         }
-        std::string said = std::string(Voice_Tr("The setup stopped.")) + " " + Voice_Tr(sError.c_str()) + " " +
-                           Voice_Tr(sRelease ? "Press Enter to try again, or Escape to close." : "Escape closes.");
-        Voice_Say(said, true);
+        say_failure(true);
     }
 }
 
@@ -670,7 +771,7 @@ static bool page_key(const SDL_Event &ev) {
         }
         return true;
     }
-    if (!enter || !sRelease) {
+    if (!enter || (!sRelease && sPage != PAGE_DONE)) { // (in a source checkout Enter only opens the game)
         return false;
     }
     switch (sPage) {
@@ -708,10 +809,26 @@ static bool only_one(const std::string &root) { // (CreateMutexW: windows.h, whi
     void *mutex = CreateMutexW(NULL, 0, L"Local\\" GAME "-setup");
     return mutex != NULL && GetLastError() != 183; // ERROR_ALREADY_EXISTS
 }
+
+// The setup that is open, brought to the front (it says where it is then); false when it has no window. Windows lets
+// a program started by the one in front (the file window, the game) do that; without it the player only hears that a
+// setup is open, and Alt+Tab finds it.
+static bool bring_forward() {
+    HWND w = FindWindowW(NULL, L"" GAME " - Setup");
+    if (w == NULL) {
+        return false;
+    }
+    if (IsIconic(w)) {
+        ShowWindow(w, SW_RESTORE);
+    }
+    SetForegroundWindow(w);
+    return true;
+}
 #else
 static bool only_one(const std::string &root) {
     int fd = open((root.empty() ? std::string(".setup-lock") : root + ".setup-lock").c_str(), O_CREAT | O_RDWR | O_CLOEXEC, 0644);
-    return fd < 0 || flock(fd, LOCK_EX | LOCK_NB) == 0; // (no lock file can be made: as before, no guard)
+    // (no lock file can be made, or the file system has no locks: as before, no guard)
+    return fd < 0 || flock(fd, LOCK_EX | LOCK_NB) == 0 || errno != EWOULDBLOCK;
 }
 #endif
 
@@ -870,6 +987,9 @@ int main(int argc, char **argv) {
     Voice_Start(sRoot);
     if (!only_one(sRoot)) {
         Voice_Say(Voice_Tr("The setup is open already."), true);
+#ifdef _WIN32
+        bring_forward(); // (which then says where it is, when it gets the focus)
+#endif
         fprintf(stderr, GAME "-setup: another setup is running\n");
         SDL_Delay(1500); // (time to say it: the system's voice ends with the program)
         SDL_Quit();
@@ -990,6 +1110,13 @@ int main(int argc, char **argv) {
             ImGui_ImplSDL3_ProcessEvent(&ev);
             if (ev.type == SDL_EVENT_QUIT || ev.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
                 sQuit = true;
+            } else if (ev.type == SDL_EVENT_WINDOW_FOCUS_GAINED) {
+                static bool first = true; // (the window's own first focus: its page was said already)
+                if (!first) {
+                    say_page();
+                    sWatchAt = 0; // (and the folder looked at now: an image may have been copied meanwhile)
+                }
+                first = false;
             } else if (ev.type == SDL_EVENT_DROP_FILE && sPage == PAGE_PICK && ev.drop.data != NULL) {
                 SDL_strlcpy(sIso, ev.drop.data, sizeof(sIso));
                 sChosen = true;
@@ -1004,6 +1131,7 @@ int main(int argc, char **argv) {
             }
         }
         pump_install();
+        watch_folder();
         if (sPage != sShownPage) {
             Page from = sShownPage;
             sShownPage = sPage;
