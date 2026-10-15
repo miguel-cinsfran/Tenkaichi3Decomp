@@ -1223,8 +1223,8 @@ baf0a7c417e388af	Vida
 155a8ca3a5af7b73	Cuando queda al alcance una transformación más o el ataque definitivo.
 # Gauges on request
 262f74e8463ad90f	Estado a pedido
-# The touchpad click or F3 / F4 in a fight: two beeps, louder the less health is left,\nor health, ki and blast said by the screen reader, or both.
-a5794d87896424a6	El clic del panel táctil o F3 y F4 en una pelea: dos pitidos, más fuertes cuanta menos vida queda, o la vida, el ki y el blast dichos por el lector de pantalla, o las dos cosas.
+# A click of the left stick in a fight (L3 on a DualSense, LS on an Xbox controller): your\ngauges; two clicks quickly: the rival's. F3 and F4 on the keyboard: player 1's and player 2's.\nTwo beeps, louder the less health is left, or health, ki and blast said by the screen\nreader, or both. Outside a fight, the click says the last message again.
+280b309d3e246c3c	Un clic de la palanca izquierda en una pelea (L3 en un DualSense, LS en un control de Xbox): tu estado; dos clics rápidos: el del rival. F3 y F4 en el teclado: el del jugador 1 y el del jugador 2. Dos pitidos, más fuertes cuanta menos vida queda, o la vida, el ki y el blast dichos por el lector de pantalla, o las dos cosas. Fuera de una pelea, el clic repite el último mensaje.
 # The accessibility's sounds in a fight: the alerts below that are told by a sound. 0 turns them off.
 541e45ef6c70280f	Los sonidos de la accesibilidad en una pelea: los avisos de abajo que se dan con un sonido. 0 los apaga.
 # Player %d can take %d transformations
