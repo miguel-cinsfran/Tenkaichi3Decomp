@@ -1253,3 +1253,17 @@ f2f6b68162023e95	Jugador %d puede tomar %d transformaciones
 5f9405b67a6c158b	Jugador %d: vida al %d por ciento
 # Off|settings
 84945b537ccbbda7	Apagado
+
+# The settings window's texts added by 0.1.35.1 to 555adc0 (online chat size, vibration, the GPU in use).
+# Compact
+7c87dc5c593f3de6	Compacto
+# Large
+c8736ef79380e634	Grande
+# Chat size
+c6b0e1bcc71c7380	Tamaño del chat
+# How wide the online chat is and how many lines it shows (while typing / otherwise).\nCompact: 4 / 2, narrower.\nNormal: 6 / 4.\nLarge: 8 / 6, wider, for large screens.
+1eed15a2c89d78ca	Qué tan ancho es el chat en línea y cuántas líneas muestra (mientras escribes / el resto del tiempo). Compacto: 4 / 2, más angosto. Normal: 6 / 4. Grande: 8 / 6, más ancho, para pantallas grandes.
+# The game's own vibration (hits, clashes, charging), on this player's controller.\nThe game's Options > Controller > Vibration has to be on as well: it is, unless you turned it off.\nThe game gives none in a replay or for a side the computer plays.
+a8a825d9de0ed964	La vibración del propio juego (golpes, choques, carga de ki), en el control de este jugador. También tiene que estar encendida la vibración en Opciones, Control, del juego: lo está, salvo que la hayas apagado. El juego no vibra en una repetición ni para un lado que juega la computadora.
+# Active GPU: %s
+b4b1eb1a2a3f5047	Placa de video en uso: %s

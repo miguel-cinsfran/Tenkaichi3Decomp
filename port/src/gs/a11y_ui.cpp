@@ -196,6 +196,7 @@ const char *const kPatterns[] = {
     "an older\nrelease only 100%%.",
     "Looking for %s...",
     "Waiting for the other player on port %s...",
+    "Active GPU: %s",
 };
 // Texts one of them would take too, that have a line of their own
 const char *const kNotPatterns[] = {"Keypad Enter", "Looking for the room..."};
