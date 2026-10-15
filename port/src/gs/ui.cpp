@@ -1360,6 +1360,7 @@ static void ui_tab(PortVideo &v) {
 }
 
 extern "C" int gPortMusicFollows; // snd_adx.c: 1 = looping music is sped up or slowed down with the game
+extern "C" int gPortStereoStreams; // snd_adx.c: 1 = a stereo file the game pans to one place keeps its two sides
 
 static void audio_tab(PortVideo &v) {
     ImGui::SliderInt("Music", &v.music, 0, 200, "%d%%", ImGuiSliderFlags_AlwaysClamp);
@@ -1379,6 +1380,16 @@ static void audio_tab(PortVideo &v) {
         ImGui::SetItemTooltip("When the game runs at another speed than 100%% (an online match, the Cheats tab):\n"
                               "off, the music plays as it is; on, it is sped up or slowed down with the game,\n"
                               "at its own pitch, as an emulator does. Spoken lines always follow the game.");
+    }
+    {
+        bool stereo = gPortStereoStreams != 0;
+        if (ImGui::Checkbox("Stereo music", &stereo)) {
+            gPortStereoStreams = stereo;
+            Port_SettingSave("stereo_streams", stereo);
+        }
+        ImGui::SetItemTooltip("The game places its music in the middle, which taken as it is plays the two\n"
+                              "sides of a stereo song together, in mono. On, a stereo song keeps its left and\n"
+                              "right: the game's own songs and those of a modified disc. Off: as before.");
     }
 }
 

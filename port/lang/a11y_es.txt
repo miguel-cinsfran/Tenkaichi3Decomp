@@ -1146,3 +1146,7 @@ abc7552c52441634	%d%% apretado
 f936bac16267e05f	Medio segundo de los dos motores con esta intensidad.
 # (this controller has none)
 620d7dc99fdce2bc	(este control no tiene)
+# Stereo music
+28c37cb72539ee8a	Música en estéreo
+# The game places its music in the middle, which taken as it is plays the two\nsides of a stereo song together, in mono. On, a stereo song keeps its left and\nright: the game's own songs and those of a modified disc. Off: as before.
+91e86e581721cea6	El juego pone su música en el medio, y tomado así los dos lados de una canción en estéreo suenan juntos, en mono. Encendido, una canción en estéreo mantiene su izquierda y su derecha: las del juego y las de un disco modificado. Apagado: como antes.
