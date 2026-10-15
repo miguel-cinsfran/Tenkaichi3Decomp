@@ -2230,10 +2230,15 @@ static void say_long(const char *text, int flags) {
 
 /* The character reference: the character under the cursor in the list, the item of its page, the profile when it
    opens, the voice's label, the costume of the model viewer. The guide's comment is voiced: not read. */
+extern const char *PortA11y_ActionName(int player, int action); /* gs/a11y_pad.c: a game button by the controller */
+#define ACTION_CROSS 4    /* gs_input.c, kActions */
+#define ACTION_TRIANGLE 7
+
 static void char_ref(void) {
     static int open, state, cursor, item, costume;
     A11yCharRef GAME_PTR c = gCharRef;
     char text[2 * A11Y_TEXT], name[A11Y_TEXT];
+    const char *button;
     int chara, len;
 
     if (c == NULL) {
@@ -2290,14 +2295,22 @@ static void char_ref(void) {
         break;
     case CHARREF_ST_COSTUME:
         if (state != CHARREF_ST_COSTUME || costume != c->costume) {
-            snprintf(text, sizeof(text), tr("Costume %d. X shows the model"),
-                     c->costume + 1);
+            if ((button = PortA11y_ActionName(-1, ACTION_CROSS)) != NULL) { /* (the controller in use's name) */
+                snprintf(text, sizeof(text), tr("Costume %d. %s shows the model"), c->costume + 1, button);
+            } else {
+                snprintf(text, sizeof(text), tr("Costume %d. X shows the model"), c->costume + 1);
+            }
             PortA11y_Say(text, follow());
         }
         break;
     case CHARREF_ST_VIEW:
         if (state != CHARREF_ST_VIEW) {
-            PortA11y_Say(tr("Model shown. Triangle goes back"), follow());
+            if ((button = PortA11y_ActionName(-1, ACTION_TRIANGLE)) != NULL) {
+                snprintf(text, sizeof(text), tr("Model shown. %s goes back"), button);
+                PortA11y_Say(text, follow());
+            } else {
+                PortA11y_Say(tr("Model shown. Triangle goes back"), follow());
+            }
         }
         break;
     }
@@ -2903,6 +2916,8 @@ extern int gPauseMenuWhich;              /* src/battle/hud_0.c: 0 the pause menu
 #define BTL_MENU_ITEM_SKILLS 3   /* as the first item: the page is the skill list */
 #define BTL_MENU_ITEM_CONTROLS 4 /* as the first item: the page is the controls */
 #define BTL_MENU_STATE_ACTIVE 4
+extern void PortA11y_SkillList(int shown); /* a11y_skills.c: the skill list, one move at a time */
+extern int PortA11y_SkillListShown(void);
 
 /* include/sys/common.h: CommonRes; in a battle, 0x28 is its common file, whose offset table holds the menus' text
    (src/battle/hud_0_b.c, BtlMenu_GetText). */
@@ -2972,6 +2987,7 @@ static void btl_menu(void) {
     char text[256];
     int i, pos = 0, count = 0;
 
+    PortA11y_SkillList(m != NULL && m->items[0].type == BTL_MENU_ITEM_SKILLS && m->state == BTL_MENU_STATE_ACTIVE);
     if (m == NULL) {
         said = NULL;
         named = 0;
@@ -3287,7 +3303,7 @@ static int own_screen(void) {
         return 1;
     }
     if (btl != NULL) {
-        return !btl_menu_page(btl);
+        return !btl_menu_page(btl) || PortA11y_SkillListShown();
     }
     if (in_battle() || gProgress == NULL) {
         return 0;

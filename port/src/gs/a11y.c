@@ -733,6 +733,10 @@ void PortA11y_Event(const SDL_Event *ev) {
     if (!sOn) {
         return;
     }
+    {
+        extern void PortA11y_PadUsed(const SDL_Event *ev); /* a11y_pad.c: the controller in use names the buttons */
+        PortA11y_PadUsed(ev);
+    }
     if (ev->type == SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN || ev->type == SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION) {
         if (sTouchX < 0) {
             PortA11y_Note("touchpad: a finger is seen");
@@ -876,6 +880,19 @@ int PortA11y_Utf8(char *out, int cap, const uint16_t *str) {
             i++;
         } else if (c == 0xFEFF || (c >= 0xD800 && c < 0xE000)) {
             continue;
+        }
+        if (c == '<') { /* the printer's icon tags (a11y_text.c): the buttons as words, a colour as nothing */
+            extern int PortA11y_GameTag(const uint16_t *at, char *out, int cap);
+            char word[160];
+            int used = PortA11y_GameTag(str + i, word, sizeof(word));
+            if (used > 0) {
+                i += used - 1;
+                if (word[0] != '\0' && n + 1 + (int)strlen(word) < cap) {
+                    n += snprintf(out + n, cap - n, "%s%s", n > 0 ? " " : "", word);
+                    space = 1;
+                }
+                continue;
+            }
         }
         if (c <= ' ') { /* line breaks and spaces: one space between words */
             space = n > 0;

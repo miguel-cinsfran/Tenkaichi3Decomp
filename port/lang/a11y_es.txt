@@ -1150,3 +1150,52 @@ f936bac16267e05f	Medio segundo de los dos motores con esta intensidad.
 28c37cb72539ee8a	Música en estéreo
 # The game places its music in the middle, which taken as it is plays the two\nsides of a stereo song together, in mono. On, a stereo song keeps its left and\nright: the game's own songs and those of a modified disc. Off: as before.
 91e86e581721cea6	El juego pone su música en el medio, y tomado así los dos lados de una canción en estéreo suenan juntos, en mono. Encendido, una canción en estéreo mantiene su izquierda y su derecha: las del juego y las de un disco modificado. Apagado: como antes.
+
+# Button names by the controller in use (port/src/gs/a11y_pad.c, sense "button") and the skill list of the pause menu
+# (port/src/a11y_skills.c).
+# Start|button
+615fbd2e2fe9c12d	Start
+# Options|button
+ad9cc392d2709c63	Options
+# Back|button
+7cb119e0bcb74002	Back
+# Select|button
+ee5f81708598bc2b	Select
+# Menu|button
+8936f32b05b5677a	Menú
+# View|button
+aa8b917c6bcaaba8	Vista
+# Share|button
+2ac7c0c93f3e6228	Share
+# Create|button
+e2295a8b70106e3b	Create
+# Minus|button
+b16316a5fb28fc9d	Menos
+# Plus|button
+9cadea88d32f2cb3	Más
+# PS button
+bcaf1e2a2e1f6898	Botón PS
+# Home button
+aae2d29915082192	Botón Home
+# Xbox button
+f463d33c43da00fc	Botón Xbox
+# Mute button
+4d48164a15a15918	Botón de silencio
+# Capture button
+6fde4f52cad755fb	Botón de captura
+# Share button
+098388d68016a15c	Botón Compartir
+# D-pad
+731465368866efab	Cruceta
+# page %d of %d
+f3f27d0d6d4df545	página %d de %d
+# locked
+aa616bdfe454ecb3	bloqueada
+# Costume %d. %s shows the model
+115c05d7484c8540	Traje %d. %s muestra el modelo
+# Model shown. %s goes back
+3af2ca26536b7e3c	Modelo en pantalla. %s vuelve
+# D-pad: move. %s: choose. %s: back. %s and %s: tab.
+31fa549485b45a6e	Cruceta: moverse. %s: elegir. %s: volver. %s y %s: cambiar de pestaña.
+# %s to enter, %s to leave
+27ad3f4bdbd7ba42	%s para entrar, %s para salir

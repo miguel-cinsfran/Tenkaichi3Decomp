@@ -41,6 +41,7 @@ int PortA11y_Voices(int fight); // a11y_game.c
 void PortA11y_SetVoices(int fight, int percent);
 void Port_SettingsWrite(void); // plat_settings.c
 void Ui_Toggle(void); // ui.cpp: opens or closes the window (F1)
+const char *PortA11y_PadSourceName(int src); // a11y_pad.c: a controller button by the name of the one in use
 }
 
 #define A11Y_INTERRUPT 1 // (the same in a11y.c)
@@ -301,6 +302,37 @@ void fill(const char *p, const char **cap, const int *capLen, int n, char *out, 
     out[o] = '\0';
 }
 
+// The controller's buttons as the window names them for any controller ("A / Cross": ui.cpp, pad_source_name, in
+// the order of SDL_GamepadButton), and its lines that name them: with the names of the controller in use instead
+// (a11y_pad.c), Cross on a PlayStation one, A on an Xbox one. 1: it was one of them and a controller is there.
+bool pad_words(const char *en, char *out, int size) {
+    static const char *const kSources[] = {"A / Cross", "B / Circle", "X / Square", "Y / Triangle", "Back / Select",
+                                           "Guide", "Start", "Left stick click", "Right stick click", "Left shoulder",
+                                           "Right shoulder", "D-pad up", "D-pad down", "D-pad left", "D-pad right",
+                                           "Misc 1", "Right paddle 1", "Left paddle 1", "Right paddle 2", "Left paddle 2",
+                                           "Touchpad"};
+    const char *a, *b, *c, *d;
+
+    for (int i = 0; i < (int)(sizeof(kSources) / sizeof(kSources[0])); i++) {
+        if (strcmp(en, kSources[i]) == 0 && (a = PortA11y_PadSourceName(i)) != NULL) {
+            snprintf(out, size, "%s", a);
+            return true;
+        }
+    }
+    if ((strcmp(en, "Left trigger") == 0 || strcmp(en, "Right trigger") == 0) &&
+        (a = PortA11y_PadSourceName(en[0] == 'L' ? 100 : 101)) != NULL) { // (ui.h: PORT_PAD_LT, PORT_PAD_RT)
+        snprintf(out, size, "%s", a);
+        return true;
+    }
+    if (strcmp(en, "D-pad: move Cross / A: choose Circle / B: back L1 / R1: tab") == 0 &&
+        (a = PortA11y_PadSourceName(0)) != NULL && (b = PortA11y_PadSourceName(1)) != NULL &&
+        (c = PortA11y_PadSourceName(9)) != NULL && (d = PortA11y_PadSourceName(10)) != NULL) {
+        snprintf(out, size, lang_line("D-pad: move. %s: choose. %s: back. %s and %s: tab."), a, b, c, d);
+        return true;
+    }
+    return false;
+}
+
 // A text the window draws, in the language spoken. 1: it was found.
 bool tr(const char *en, char *out, int size) {
     const char *cap[8], *t;
@@ -309,6 +341,9 @@ bool tr(const char *en, char *out, int size) {
 
     if (strcmp(en, "-") == 0) { // the window's mark for a binding with nothing on it, which a screen reader may skip
         en = "Unbound";
+    }
+    if (pad_words(en, out, size)) {
+        return true;
     }
     if (!letters(en)) {
         snprintf(out, size, "%s", en);
@@ -1251,7 +1286,14 @@ void speak(ImGuiContext &g) {
             }
             ImGuiWindow *region = d.kind == K_TABLE || d.kind == K_GROUP ? child_of(f) : NULL;
             if (region) {
-                add(sp, lang_line("Cross or A to enter, Circle or B to leave"), ". ");
+                const char *enter = PortA11y_PadSourceName(0), *leave = PortA11y_PadSourceName(1);
+                char line[160];
+                if (enter != NULL && leave != NULL) {
+                    snprintf(line, sizeof(line), lang_line("%s to enter, %s to leave"), enter, leave);
+                    add(sp, line, ". ");
+                } else {
+                    add(sp, lang_line("Cross or A to enter, Circle or B to leave"), ". ");
+                }
             }
             // Its description: the lines since the item before it that can be reached (a region: before what is in it)
             if (!it.table && !(introduced && fp == first)) {
