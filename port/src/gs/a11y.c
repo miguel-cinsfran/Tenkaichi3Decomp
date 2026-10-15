@@ -602,8 +602,8 @@ static void start(void) {
     SDL_Locale **loc;
     int n = 0;
 
-    if (!Port_Setting("a11y", 1)) {
-        return;
+    if (!Port_Setting("a11y", 1) || (getenv("BT3_A11Y") != NULL && strcmp(getenv("BT3_A11Y"), "0") == 0)) {
+        return; /* (BT3_A11Y=0: the setup's self-test, a demo fight with no window, says nothing over the setup) */
     }
     if (getenv("BT3_A11Y_LOG") != NULL) {
         sLog = fopen(getenv("BT3_A11Y_LOG"), "w");

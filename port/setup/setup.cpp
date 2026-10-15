@@ -15,12 +15,18 @@
 #include <string>
 #include <vector>
 #include <SDL3/SDL.h>
+#ifndef _WIN32
+#include <fcntl.h>
+#include <sys/file.h>
+#include <unistd.h>
+#endif
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlgpu3.h"
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_opengl3_loader.h" // glViewport, glClear for the OpenGL window (set up by ImGui_ImplOpenGL3_Init)
 #include "native.h"
+#include "setup_voice.h"
 
 #define GAME "Tenkaichi3Decomp" /* the program this sets up: GAME, GAME.dat; this program is GAME-setup */
 
@@ -57,7 +63,7 @@ static SDL_GLContext sGl;
 static bool sUseGl;
 static Page sPage = PAGE_PICK;
 static char sIso[1024];
-static std::string sRoot, sError, sLauncher, sLine;
+static std::string sRoot, sError, sErrorDetail, sLauncher, sLine; // sErrorDetail: a file or a line, shown, not said
 static std::vector<StepRow> sRows;
 static std::vector<Missing> sMissing;
 static SDL_Process *sProc;
@@ -66,6 +72,12 @@ static std::mutex sDialogLock;
 static std::string sDialogResult;
 static bool sDialogReady, sQuit;
 static Uint64 sRunStart, sRunEnd;
+static std::vector<std::string> sCandidates; // disc images of the folder still to try (setup_voice.cpp)
+static Uint64 sAutoPlayAt;                    // when the game opens by itself, 0 not
+static int sSaidPercent;                      // the last quarter of the copy that was said
+static Page sShownPage;                       // the page whose change was last told (page_changed)
+static bool sChosen;                          // sIso was chosen by the player (argument, Browse, a drop, typed), not found
+static bool sStopAsked;                       // Cancel was pressed in this run: whatever ends it, the game does not open
 static const ImVec4 kAccent(0.96f, 0.55f, 0.13f, 1.0f), kGreen(0.36f, 0.80f, 0.45f, 1.0f), kRed(0.93f, 0.36f, 0.33f, 1.0f),
     kDim(0.60f, 0.63f, 0.70f, 1.0f);
 
@@ -124,6 +136,9 @@ static void reset_rows() {
 
 static void start_install() {
     static std::string iso;
+    sShownPage = PAGE_RUN; // (a run that fails before a frame has shown it still changes the page: told)
+    sStopAsked = false;
+    sErrorDetail.clear();
     const char *args[8];
     SDL_PropertiesID props = SDL_CreateProperties();
     std::string script = sRoot + "install.py";
@@ -212,9 +227,21 @@ static void event(const std::string &line) {
             sRows[i - 1].state = RUNNING;
             sRows[i - 1].start = SDL_GetTicks();
             sRows[i - 1].detail.clear();
+            // (said: what the step does, in words a child knows)
+            const std::string &t = sRows[i - 1].title;
+            Voice_Say(Voice_Tr(t == "Disc image" ? "Reading your disc." : t == "Game data" ? "Copying the game's files. This is the long part."
+                                                  : t == "Self-test" ? "Testing the game." : t.c_str()), false);
+            sSaidPercent = 0;
         }
     } else if (cur != NULL && kind == "note") {
         cur->detail = text;
+        int percent = atoi(text.c_str()); // ("@note 25%, ... files" while the files are copied)
+        if (cur->title == "Game data" && percent / 25 > sSaidPercent / 25 && percent < 100) {
+            char said[64];
+            sSaidPercent = percent / 25 * 25;
+            snprintf(said, sizeof(said), Voice_TrFormat("%d percent"), sSaidPercent);
+            Voice_Say(said, false);
+        }
     } else if (cur != NULL && (kind == "ok" || kind == "skip" || kind == "fail")) {
         cur->state = kind == "ok" ? OK : kind == "skip" ? SKIPPED : FAILED;
         cur->end = SDL_GetTicks();
@@ -228,6 +255,8 @@ static void event(const std::string &line) {
             m.pkg = text.substr(b + 1);
             sMissing.push_back(m);
         }
+    } else if (kind == "detail") {
+        sErrorDetail = text;
     } else if (kind == "stopped") {
         sError = text;
     } else if (kind == "done") {
@@ -358,10 +387,13 @@ static void page_pick() {
     ImGui::TextWrapped("Choose your disc image of Dragon Ball Z: Budokai Tenkaichi 3, USA release (SLUS-21678), as an .iso file. "
                        "The game's data is taken from it and stays on this computer. %s",
                        sRelease ? "Nothing is downloaded." : "Nothing is downloaded except one small tool.");
+    ImGui::TextWrapped("Or put it next to the zip you unpacked, or in this program's folder, and press Enter: it is found there by itself.");
     ImGui::Dummy(ImVec2(0.0f, 10.0f));
     ImGui::TextUnformatted("Disc image");
     ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 130.0f);
-    ImGui::InputTextWithHint("##iso", "drop the file on this window, or browse", sIso, sizeof(sIso));
+    if (ImGui::InputTextWithHint("##iso", "drop the file on this window, or browse", sIso, sizeof(sIso))) {
+        sChosen = true;
+    }
     ImGui::SameLine();
     if (ImGui::Button("Browse...", ImVec2(120.0f, 0.0f))) {
         SDL_ShowOpenFileDialog(dialog_done, NULL, sWindow, filters, 2, NULL, false);
@@ -449,7 +481,31 @@ static void page_run() {
             SDL_KillProcess(sProc, false);
         }
         Native_Cancel();
+        sStopAsked = true;
         sError = "Cancelled. Finished steps are kept; Install continues from where it stopped.";
+    }
+}
+
+static void launch_game() {
+    const char *args[2] = {sLauncher.c_str(), NULL};
+    SDL_PropertiesID props = SDL_CreateProperties();
+    SDL_Environment *env = SDL_CreateEnvironment(true);
+    SDL_SetEnvironmentVariable(env, "BT3_GS", "gpu", true); // the window and the GPU renderer
+    SDL_SetEnvironmentVariable(env, "BT3_FROM_SETUP", "1", true); // (a game without its data does not open the setup again)
+    SDL_UnsetEnvironmentVariable(env, "BT3_DEMO");
+    SDL_UnsetEnvironmentVariable(env, "BT3_REPLAY");
+    SDL_SetPointerProperty(props, SDL_PROP_PROCESS_CREATE_ARGS_POINTER, (void *)args);
+    SDL_SetPointerProperty(props, SDL_PROP_PROCESS_CREATE_ENVIRONMENT_POINTER, env);
+    SDL_SetStringProperty(props, SDL_PROP_PROCESS_CREATE_WORKING_DIRECTORY_STRING, sRoot.c_str());
+    SDL_SetBooleanProperty(props, SDL_PROP_PROCESS_CREATE_BACKGROUND_BOOLEAN, true);
+    SDL_Process *game = SDL_CreateProcessWithProperties(props);
+    SDL_DestroyProperties(props);
+    SDL_DestroyEnvironment(env);
+    if (game != NULL) {
+        SDL_DestroyProcess(game);
+        sQuit = true;
+    } else {
+        Voice_Say(Voice_Tr("The game could not be opened."), true);
     }
 }
 
@@ -471,23 +527,7 @@ static void page_done() {
     }
     ImGui::SameLine();
     if (big_button("Play", true)) {
-        const char *args[2] = {sLauncher.c_str(), NULL};
-        SDL_PropertiesID props = SDL_CreateProperties();
-        SDL_Environment *env = SDL_CreateEnvironment(true);
-        SDL_SetEnvironmentVariable(env, "BT3_GS", "gpu", true); // the window and the GPU renderer
-        SDL_UnsetEnvironmentVariable(env, "BT3_DEMO");
-        SDL_UnsetEnvironmentVariable(env, "BT3_REPLAY");
-        SDL_SetPointerProperty(props, SDL_PROP_PROCESS_CREATE_ARGS_POINTER, (void *)args);
-        SDL_SetPointerProperty(props, SDL_PROP_PROCESS_CREATE_ENVIRONMENT_POINTER, env);
-        SDL_SetStringProperty(props, SDL_PROP_PROCESS_CREATE_WORKING_DIRECTORY_STRING, sRoot.c_str());
-        SDL_SetBooleanProperty(props, SDL_PROP_PROCESS_CREATE_BACKGROUND_BOOLEAN, true);
-        SDL_Process *game = SDL_CreateProcessWithProperties(props);
-        SDL_DestroyProperties(props);
-        SDL_DestroyEnvironment(env);
-        if (game != NULL) {
-            SDL_DestroyProcess(game);
-            sQuit = true;
-        }
+        launch_game();
     }
 }
 
@@ -496,6 +536,9 @@ static void page_failed() {
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.93f, 0.36f, 0.33f, 0.10f));
     ImGui::BeginChild("why", ImVec2(0.0f, sMissing.empty() ? 150.0f : 90.0f), ImGuiChildFlags_AlwaysUseWindowPadding);
     ImGui::TextWrapped("%s", sError.c_str());
+    if (!sErrorDetail.empty()) {
+        ImGui::TextColored(kDim, "%s", sErrorDetail.c_str());
+    }
     ImGui::EndChild();
     ImGui::PopStyleColor();
     if (!sMissing.empty() && ImGui::BeginTable("missing", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV)) {
@@ -538,6 +581,139 @@ static void build_ui() {
     }
     ImGui::End();
 }
+
+// ------------------------------------------------------------------------------------------ the setup by itself
+// For a player who cannot see this window, or a child: put the disc image in this program's folder and open the
+// program (or the game, which opens it when its data is missing). It finds the image (setup_voice.cpp), installs,
+// says how it goes through the screen reader (Prism, the game's own), and opens the game. Enter (or the controller's
+// Cross / A) does the next thing of the page, Escape (Circle / B) closes; the mouse and Tab work as before.
+
+static std::string base_name(const std::string &path) {
+    size_t slash = path.find_last_of("/\\");
+    return slash == std::string::npos ? path : path.substr(slash + 1);
+}
+
+// The next disc image found in the folder, installed; false when none is left. `cut`: what was being said stops.
+static bool start_found(bool cut = true) {
+    char said[1024];
+    if (sCandidates.empty()) {
+        return false;
+    }
+    SDL_strlcpy(sIso, sCandidates.front().c_str(), sizeof(sIso));
+    sCandidates.erase(sCandidates.begin());
+    sChosen = false;
+    snprintf(said, sizeof(said), Voice_TrFormat("Found your disc image, %s. Installing the game: it takes a minute or two."), base_name(sIso).c_str());
+    Voice_Say(said, cut);
+    start_install();
+    return true;
+}
+
+static void look_for_disc() {
+    sCandidates = Voice_FindIsos(sRoot);
+    if (!start_found()) {
+        sPage = PAGE_PICK;
+        Voice_Say(Voice_Tr("No disc image was found. Copy your disc image of Dragon Ball Z Budokai Tenkaichi 3, the file that ends "
+                           "in .iso, into the same folder as this program, then press Enter. Escape closes."), true);
+    }
+}
+
+// 1 when the last run stopped at its first step, reading the disc image: the image was not the game's (or not one).
+static bool disc_failed() {
+    return sRelease && !sRows.empty() && sRows[0].state == FAILED;
+}
+
+// What is said when the page changes; and where the next disc image of the folder is tried.
+static void page_changed(Page from) {
+    if (sPage == PAGE_DONE) {
+        if (!sRelease || sStopAsked) { // (a source checkout shows its result; a player who cancelled decides)
+            Voice_Say(Voice_Tr("Ready: the game is installed. Enter opens it, Escape closes."), true);
+            return;
+        }
+        Voice_Say(Voice_Tr(from == PAGE_RUN ? "Ready: the game is installed. It opens now."
+                                            : "The game is installed already. It opens now; Escape stays here."), true);
+        sAutoPlayAt = SDL_GetTicks() + (from == PAGE_RUN ? 2500 : 4000);
+    } else if (sPage == PAGE_FAILED) {
+        // only an image that is not the game's makes the next one of the folder worth a try: a full disk or a
+        // self-test that could not run would fail the same with any image, and its reason has to be heard
+        if (disc_failed() && !sStopAsked && !sCandidates.empty()) {
+            Voice_Say(Voice_Tr("That disc image is not the right one; trying the next one."), true);
+            start_found(false);
+            return;
+        }
+        std::string said = std::string(Voice_Tr("The setup stopped.")) + " " + Voice_Tr(sError.c_str()) + " " +
+                           Voice_Tr(sRelease ? "Press Enter to try again, or Escape to close." : "Escape closes.");
+        Voice_Say(said, true);
+    }
+}
+
+// Enter / Escape and the controller's two buttons; true when the event was taken here. Enter on a button the keyboard
+// moved to (Tab) is that button's, as ImGui has it.
+static bool page_key(const SDL_Event &ev) {
+    bool enter = false, escape = false;
+    if (ev.type == SDL_EVENT_KEY_DOWN && !ev.key.repeat) {
+        enter = (ev.key.key == SDLK_RETURN || ev.key.key == SDLK_KP_ENTER) && !ImGui::IsAnyItemFocused();
+        escape = ev.key.key == SDLK_ESCAPE;
+    } else if (ev.type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+        enter = ev.gbutton.button == SDL_GAMEPAD_BUTTON_SOUTH;
+        escape = ev.gbutton.button == SDL_GAMEPAD_BUTTON_EAST;
+    } else if (ev.type == SDL_EVENT_GAMEPAD_ADDED) {
+        SDL_OpenGamepad(ev.gdevice.which);
+    }
+    if (escape) {
+        if (sAutoPlayAt != 0) {
+            sAutoPlayAt = 0;
+            Voice_Say(Voice_Tr("The game does not open. Enter opens it, Escape closes."), true);
+        } else if (sPage == PAGE_RUN) {
+            Voice_Say(Voice_Tr("Still installing. Please wait."), true);
+        } else {
+            sQuit = true;
+        }
+        return true;
+    }
+    if (!enter || !sRelease) {
+        return false;
+    }
+    switch (sPage) {
+    case PAGE_PICK: // the image the player chose, else the folder looked at again (one may have been put there)
+        if (sChosen && file_exists(sIso)) {
+            start_install();
+        } else {
+            look_for_disc();
+        }
+        break;
+    case PAGE_RUN:
+        Voice_Say(Voice_Tr("Still installing. Please wait."), true);
+        break;
+    case PAGE_DONE:
+        sAutoPlayAt = 0;
+        launch_game();
+        break;
+    case PAGE_FAILED: // the same image when it was the right one (a full disk, a blocked test); else the folder again
+        if (!disc_failed() && file_exists(sIso)) {
+            start_install();
+        } else {
+            look_for_disc();
+        }
+        break;
+    }
+    return true;
+}
+
+// One setup at a time for this computer: a second one (a double click more, or the game opened while it installs,
+// which opens its setup) would write the same files at once. Kept until the program ends; the system lets it go
+// then, however it ends.
+#ifdef _WIN32
+static bool only_one(const std::string &root) { // (CreateMutexW: windows.h, which imgui_impl_opengl3_loader.h includes)
+    (void)root;
+    void *mutex = CreateMutexW(NULL, 0, L"Local\\" GAME "-setup");
+    return mutex != NULL && GetLastError() != 183; // ERROR_ALREADY_EXISTS
+}
+#else
+static bool only_one(const std::string &root) {
+    int fd = open((root.empty() ? std::string(".setup-lock") : root + ".setup-lock").c_str(), O_CREAT | O_RDWR | O_CLOEXEC, 0644);
+    return fd < 0 || flock(fd, LOCK_EX | LOCK_NB) == 0; // (no lock file can be made: as before, no guard)
+}
+#endif
 
 // ---------------------------------------------------------------------------------------------------- the window
 
@@ -669,6 +845,10 @@ int main(int argc, char **argv) {
             fprintf(stderr, GAME "-setup --install works in a release folder (" GAME " and " GAME ".dat next to it).\nIn a source checkout: python3 install.py --iso <file>\n");
             return 2;
         }
+        if (!only_one(sRoot)) {
+            fprintf(stderr, GAME "-setup: another setup is running\n");
+            return 1;
+        }
         Native_Start(sRoot, argv[2]);
         for (bool last = false; !last;) {
             last = !Native_Running(); // one more round after the worker has ended: nothing is left behind
@@ -685,6 +865,15 @@ int main(int argc, char **argv) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         fprintf(stderr, GAME "-setup: %s\n", SDL_GetError());
         return 1;
+    }
+    sRoot = find_root();
+    Voice_Start(sRoot);
+    if (!only_one(sRoot)) {
+        Voice_Say(Voice_Tr("The setup is open already."), true);
+        fprintf(stderr, GAME "-setup: another setup is running\n");
+        SDL_Delay(1500); // (time to say it: the system's voice ends with the program)
+        SDL_Quit();
+        return 0;
     }
     const char *glsl = "#version 330";
     {
@@ -761,7 +950,6 @@ int main(int argc, char **argv) {
         info.MSAASamples = SDL_GPU_SAMPLECOUNT_1;
         ImGui_ImplSDLGPU3_Init(&info);
     }
-    sRoot = find_root();
     if (sRelease && Native_Installed(sRoot) && getenv("BT3_SETUP_ISO") == NULL) { // nothing left to do: offer Play
         reset_rows();
         for (auto &r : sRows) {
@@ -773,31 +961,59 @@ int main(int argc, char **argv) {
     }
     if (argc > 1) {
         SDL_strlcpy(sIso, argv[1], sizeof(sIso));
+        sChosen = true;
     }
+    SDL_InitSubSystem(SDL_INIT_GAMEPAD);
     if (getenv("BT3_SETUP_ISO") != NULL) {
         SDL_strlcpy(sIso, getenv("BT3_SETUP_ISO"), sizeof(sIso));
         if (!sRoot.empty() && file_exists(sIso)) {
             start_install();
         }
+    } else if (sRelease && sPage == PAGE_PICK) { // (by itself: the image given, else the one in the folder)
+        if (file_exists(sIso)) {
+            start_install();
+        } else {
+            look_for_disc();
+        }
+    }
+    if (sPage == PAGE_DONE) {
+        sShownPage = PAGE_PICK; // (installed already: told as a change, at the first frame)
+    } else if (sPage != PAGE_RUN) {
+        sShownPage = sPage;
     }
     while (!sQuit) {
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
+            if (page_key(ev)) {
+                continue;
+            }
             ImGui_ImplSDL3_ProcessEvent(&ev);
             if (ev.type == SDL_EVENT_QUIT || ev.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
                 sQuit = true;
             } else if (ev.type == SDL_EVENT_DROP_FILE && sPage == PAGE_PICK && ev.drop.data != NULL) {
                 SDL_strlcpy(sIso, ev.drop.data, sizeof(sIso));
+                sChosen = true;
             }
         }
         {
             std::lock_guard<std::mutex> lock(sDialogLock);
             if (sDialogReady) {
                 SDL_strlcpy(sIso, sDialogResult.c_str(), sizeof(sIso));
+                sChosen = true;
                 sDialogReady = false;
             }
         }
         pump_install();
+        if (sPage != sShownPage) {
+            Page from = sShownPage;
+            sShownPage = sPage;
+            ImGui::SetNavCursorVisible(false); // (a button Tab reached on the page before is not there: Enter is the page's)
+            page_changed(from);
+        }
+        if (sAutoPlayAt != 0 && SDL_GetTicks() >= sAutoPlayAt) {
+            sAutoPlayAt = 0;
+            launch_game();
+        }
         if (sUseGl) {
             ImGui_ImplOpenGL3_NewFrame();
         } else {

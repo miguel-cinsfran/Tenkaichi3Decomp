@@ -1267,3 +1267,63 @@ c6b0e1bcc71c7380	Tamaño del chat
 a8a825d9de0ed964	La vibración del propio juego (golpes, choques, carga de ki), en el control de este jugador. También tiene que estar encendida la vibración en Opciones, Control, del juego: lo está, salvo que la hayas apagado. El juego no vibra en una repetición ni para un lado que juega la computadora.
 # Active GPU: %s
 b4b1eb1a2a3f5047	Placa de video en uso: %s
+
+# The setup speaking for itself (port/setup/setup.cpp, setup_voice.cpp).
+# Reading your disc.
+007440cfe6a37743	Leyendo tu disco.
+# Copying the game's files. This is the long part.
+e9d2ba88828dcb2e	Copiando los archivos del juego. Esta es la parte larga.
+# Testing the game.
+70d0541e1adc9764	Probando el juego.
+# %d percent
+9e12afc6039b692d	%d por ciento
+# Found your disc image, %s. Installing the game: it takes a minute or two.
+ed4851122a97141f	Encontré tu imagen de disco, %s. Instalando el juego: tarda uno o dos minutos.
+# No disc image was found. Copy your disc image of Dragon Ball Z Budokai Tenkaichi 3, the file that ends in .iso, into the same folder as this program, then press Enter. Escape closes.
+4ac3f638f940365f	No encontré la imagen de disco. Copia tu imagen de disco de Dragon Ball Z Budokai Tenkaichi 3, el archivo que termina en .iso, en la misma carpeta que este programa, y después pulsa Enter. Escape cierra.
+# Ready: the game is installed. It opens now.
+334cd5c7c9dc5707	Listo: el juego está instalado. Ahora se abre.
+# The game is installed already. It opens now; Escape stays here.
+f1e2d7eb7d5edce8	El juego ya está instalado. Ahora se abre; Escape te deja aquí.
+# That disc image is not the right one; trying the next one.
+56f2759e1d3fc382	Esa imagen de disco no es la correcta; pruebo con la siguiente.
+# The setup stopped.
+08b6e60516db4cd2	La instalación se detuvo.
+# Press Enter to try again, or Escape to close.
+b5bb5463c3abf99f	Pulsa Enter para intentarlo de nuevo, o Escape para cerrar.
+# The game does not open. Enter opens it, Escape closes.
+ad55ca5c58779a4e	El juego no se abre. Enter lo abre, Escape cierra.
+# Still installing. Please wait.
+e7d4f00e4faf5663	Todavía se está instalando. Espera, por favor.
+# The game could not be opened.
+852da3882f9af8da	No se pudo abrir el juego.
+# This is not a disc image of the USA release of Budokai Tenkaichi 3 (no SLUS_216.78 on it).\nOther regions and the Wii version have different programs and are not supported.
+566cc0f10e218eee	Esta no es una imagen de disco de la versión de Estados Unidos de Budokai Tenkaichi 3. Las versiones de otras regiones y la de Wii tienen otros programas y no sirven.
+# The game's programs on this disc do not have the expected checksums.\nThe port needs the unmodified USA release (SLUS-21678); a patched or damaged image will not work.
+38a11159efaf7a89	Los programas del juego en este disco no son los esperados. Hace falta la versión de Estados Unidos sin modificar (SLUS-21678); una imagen modificada o dañada no sirve.
+# This file is not a disc image (.iso). Compressed images (.chd, .cso, .gz) have to be converted to .iso first.
+442a9809dadc8fec	Este archivo no es una imagen de disco ISO. Las imágenes comprimidas (.chd, .cso, .gz) hay que convertirlas a .iso primero.
+# The disc image could not be read to its end. It may be incomplete.
+fb5cfaab847c3aa4	No se pudo leer la imagen de disco hasta el final. Puede estar incompleta.
+# Cancelled. Install continues from where it stopped.
+d1bd084f50645a24	Cancelado. La instalación sigue desde donde quedó.
+# The setup stopped unexpectedly.
+833b847793b57406	La instalación se detuvo de forma inesperada.
+# The disc image could not be opened.
+af8e1c8e279734d8	No se pudo abrir la imagen de disco.
+# Could not write the game's files. Is the disk full or the folder read-only?
+0ec45fe9ade1a793	No se pudieron escribir los archivos del juego. ¿El disco está lleno, o la carpeta es de solo lectura?
+# An archive on the disc is damaged. The disc image may be incomplete.
+d212ed6216c48b57	Un archivo del disco está dañado. Puede que la imagen de disco esté incompleta.
+# The game could not be started. Security software may be blocking it.
+c0eae51f4e992c07	No se pudo iniciar el juego. Puede que un antivirus lo esté bloqueando.
+# The game's demo fight did not finish. The full output is in install.log.
+a9eaece1e6cb5e8b	La pelea de prueba del juego no terminó. Todo lo que escribió está en install.log.
+# Ready: the game is installed. Enter opens it, Escape closes.
+0de334611cea2f7d	Listo: el juego está instalado. Enter lo abre, Escape cierra.
+# Escape closes.
+12be4fc916ff958b	Escape cierra.
+# The setup is open already.
+b279f00490e62061	El instalador ya está abierto.
+# Cancelled. Finished steps are kept; Install continues from where it stopped.
+5ee3354d1585478a	Cancelado. Los pasos terminados se guardan; la instalación sigue desde donde se detuvo.
