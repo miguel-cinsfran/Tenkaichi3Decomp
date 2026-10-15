@@ -16,7 +16,7 @@ Contents:  Tenkaichi3Decomp, Tenkaichi3Decomp.dat   the game without the data ta
            tbo/ui/         the pictures of the Tenkaichi Budokai Online screens (port/tbo/ui), their credits in licenses/
            README.txt, licenses/
 The user needs nothing but their disc image. Nothing from the disc is in the zip."""
-import os, pathlib, re, shutil, subprocess, sys, zipfile
+import hashlib, os, pathlib, re, shutil, subprocess, sys, zipfile
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -127,6 +127,66 @@ def take_lang(out):
         if not p.name.endswith("_own.txt"):
             shutil.copy2(p, out / p.name)
 
+PRISM_VERSION = "0.18.3"
+PRISM_DLL = "dynamic/release/bin/prism.dll"  # in Prism's prism-windows-x64.zip
+
+def take_prism(out, lic):
+    """The screen reader's speech library, for the accessible release (Windows): with BT3_PRISM naming Prism's
+    release archive prism-windows-x64.zip of release 0.18.3 (or its prism.dll, with BT3_PRISM_SRC naming a checkout of
+    that release or the unpacked archive), prism.dll goes next to the program with the licences it is shipped under:
+    Prism's NOTICE and every licence of LICENSES/ (MPL-2.0 for Prism; MIT, BSD, Apache-2.0, LGPL-2.1 and others for
+    the code compiled into the library), and the instructions of port/release/a11y. A library without them is not
+    shipped: the build stops. Without BT3_PRISM nothing changes, and the reader stays off until the player puts the
+    library there; that is the ordinary release, which must not speak to a player who did not ask for it (with the
+    library there and no screen reader running, Prism speaks through the system's voice).
+    Linux: Prism's Linux release has no libprism.so, so the Linux archive never carries one."""
+    given = os.environ.get("BT3_PRISM")
+    if not given:
+        return
+    given = pathlib.Path(given)
+    if not given.is_file():
+        sys.exit(f"BT3_PRISM: {given} not found")
+    dest = lic / "prism"
+    dest.mkdir()
+    if given.suffix.lower() == ".zip":
+        with zipfile.ZipFile(given) as z:
+            names = z.namelist()
+            if PRISM_DLL not in names:
+                sys.exit(f"BT3_PRISM: {given} has no {PRISM_DLL}: not Prism's prism-windows-x64.zip")
+            data = z.read(PRISM_DLL)
+            for n in names:
+                if (n == "NOTICE" or n == "LICENSE" or n.startswith("LICENSES/")) and not n.endswith("/"):
+                    (dest / n).parent.mkdir(parents=True, exist_ok=True)
+                    (dest / n).write_bytes(z.read(n))
+        name = "prism.dll"
+    else:
+        src = pathlib.Path(os.environ.get("BT3_PRISM_SRC") or "/nonexistent")
+        if not (src / "NOTICE").is_file() or not (src / "LICENSES").is_dir():
+            sys.exit("BT3_PRISM_SRC must name a checkout of Prism's release (or its unpacked archive): "
+                     "prism.dll is shipped with its NOTICE and LICENSES/")
+        data = given.read_bytes()
+        name = given.name
+        for p in [src / "NOTICE", src / "LICENSE"] + sorted((src / "LICENSES").rglob("*")):
+            if p.is_file():
+                (dest / p.relative_to(src)).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(p, dest / p.relative_to(src))
+    if not (dest / "LICENSES/prism/mpl-2.0.txt").is_file() and not (dest / "LICENSE").is_file():
+        sys.exit("BT3_PRISM: Prism's own licence (LICENSES/prism/mpl-2.0.txt) was not found")
+    (out / name).write_bytes(data)
+    for p in list(dest.rglob("*")):  # (plain text the Notepad of any Windows opens: a .txt name, CRLF line ends)
+        if p.is_file():
+            text = p.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+            p.unlink()
+            p.with_name(p.name if p.suffix == ".txt" else p.name.replace(".md", "") + ".txt").write_bytes(text)
+    digest = hashlib.sha256(data).hexdigest()
+    (dest / "SOURCE.txt").write_text(f"{name} is Prism, release {PRISM_VERSION}, under the Mozilla Public License 2.0\r\n"
+                                     "(LICENSES/prism/mpl-2.0.txt). It includes code of the projects listed in NOTICE.txt,\r\n"
+                                     "under the licences in LICENSES/.\r\n"
+                                     f"Its source code: https://github.com/ethindp/prism (tag v{PRISM_VERSION}).\r\n"
+                                     f"SHA-256 of {name} in this release: {digest}\r\n")
+    for p in sorted((ROOT / "port/release/a11y").glob("*.txt")):
+        (out / p.name).write_text(p.read_text(encoding="utf-8").replace("\n", "\r\n"), encoding="utf-8")
+
 def take_fonts(out, lic):
     """The fonts the settings offer, and their licences next to them and in licenses/. Only what is in the
     repository: the list of menu labels (gamedata/game-text) is made from the disc, by the game at its first start
@@ -204,6 +264,7 @@ def main_win():
 
     take_fonts(out, lic)
     take_tbo_art(out, lic)
+    take_prism(out, lic)
     (out / "textures").mkdir()
     (out / "textures/README.txt").write_text(TEXTURES_NOTE.replace("\n", "\r\n"))
     for kind, note in (("stages", STAGES_NOTE), ("songs", SONGS_NOTE)):
