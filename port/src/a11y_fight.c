@@ -109,8 +109,8 @@ static int sMode[ALERTS] = {-1, -1, -1, -1, -1};
 
 static int mode(int alert) {
     if (sMode[alert] < 0) {
-        int v = Port_Setting(kKeys[alert], kDefaults[alert]);
-        sMode[alert] = v < 0 || v > 3 ? kDefaults[alert] : v;
+        int v = Port_Setting(kKeys[alert], kDefaults[alert]), lo = alert == ALERT_GAUGES ? 1 : 0;
+        sMode[alert] = v < lo || v > 3 ? kDefaults[alert] : v; /* (the gauges asked for are always told some way) */
     }
     return sMode[alert];
 }
@@ -138,7 +138,12 @@ static int health_loud(int hp, int max) {
 /* The gauges asked for (a11y_game.c, fight_gauges): the beeps when they go by sound; returns how they are told, so
    that the caller says them when that includes the voice. */
 int PortA11y_GaugesQuery(int side) {
+    extern int PortA11y_CueVolume(void); /* gs/a11y.c */
     int m = mode(ALERT_GAUGES);
+
+    if (m == BY_SOUND && PortA11y_CueVolume() <= 0) {
+        m = BY_VOICE; /* (the cues turned off: the beeps would be silent, and a question gets an answer) */
+    }
 
     if (m & BY_SOUND) {
         PortA11y_Tone(TONE_HEALTH, side, 0, health_loud(BtlCharApi_GetHp(side), BtlCharApi_GetHpMax(side)));
@@ -172,16 +177,19 @@ static void distance(int me, A11yVec *a, A11yVec *b) {
     static int next, zone = -1, heard = -1, held;
     float dx = b->x - a->x, dy = a->y - b->y, dz = b->z - a->z, d = sqrtf(dx * dx + dy * dy + dz * dz);
     int m = mode(ALERT_DISTANCE), close = BtlCharApi_IsClose(me) != 0, gap, pitch, now;
+    float x;
     char text[128];
 
     if (m & BY_SOUND) {
         /* 80 ms apart close by to 1.2 s far away; half an octave up or down at three fighters' height, an octave at most */
         gap = (int)((80.0f + 1120.0f * d / (d + MIDDLE)) * 60.0f / 1000.0f);
+        gap = gap < 5 ? 5 : gap; /* (the double tick lasts 75 ms: never put a new one over it) */
         if (next - sBlank > gap) {
             next = sBlank + gap; /* (nearer now: the next tick comes sooner) */
         }
         if (sBlank >= next) {
-            pitch = (int)lrintf(12.0f * dy / (fabsf(dy) + HIGH));
+            x = 12.0f * dy / (fabsf(dy) + HIGH);
+            pitch = (int)(x < 0.0f ? x - 0.5f : x + 0.5f); /* (rounded here: the C library's lrintf is the host's, SSE) */
             PortA11y_Tone(close ? TONE_DISTANCE_CLOSE : TONE_DISTANCE, -1, pitch, 100);
             next = sBlank + gap;
         }

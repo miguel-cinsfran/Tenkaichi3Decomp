@@ -38,6 +38,7 @@ extern void PortA11y_Say(const char *text, int flags);
 extern void PortA11y_Note(const char *text);
 extern int PortA11y_Utf8(char *out, int cap, const uint16_t *str);
 extern void PortA11y_TextPlayer(int player); /* a11y_text.c */
+extern int Port_NetActive(void);             /* gs/net.c */
 
 /* include/battle/hud_0.h: BtlMenuList and BtlMenuWork (the same block as btl_seq.h's BtlTextWork), what is read. */
 typedef struct {
@@ -158,7 +159,7 @@ static void page_text(A11ySkillWork GAME_PTR w, int side, int title, char *text,
                         add(text, cap, tr("locked"), ", ");
                     }
                 }
-            } else if (page == want && entry == cursor && (p[0] == '%' || p[0] == '#')) {
+            } else if (page == want && entry == cursor && ((p[0] == '%' && (p[1] == '0' || p[1] == '1')) || p[0] == '#')) {
                 line_text(p + (p[0] == '%' ? 2 : 1), line, sizeof(line));
                 add(text, cap, line, ". ");
             }
@@ -199,7 +200,7 @@ void PortA11y_SkillList(int shown) {
     if (page == saidPage && cursor == saidCursor && side == saidSide) {
         return;
     }
-    PortA11y_TextPlayer(side);
+    PortA11y_TextPlayer(Port_NetActive() ? 0 : side); /* (online the local player plays with player 1's controls: net.c) */
     page_text(w, side, page != saidPage || side != saidSide, text, sizeof(text));
     saidPage = page;
     saidCursor = cursor;

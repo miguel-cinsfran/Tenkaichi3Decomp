@@ -870,7 +870,7 @@ void PortA11y_Cue(int side, int kind) {
    line, into out (cap bytes with the terminator); out of English, the line from a11y_<code>.txt instead when it has one.
    Returns the length. */
 int PortA11y_Utf8(char *out, int cap, const uint16_t *str) {
-    int n = 0, i, space = 0, need;
+    int n = 0, i, space = 0, need, tagged = 0;
     uint32_t c;
 
     for (i = 0; str[i] != 0 && i < 4096; i++) {
@@ -887,6 +887,7 @@ int PortA11y_Utf8(char *out, int cap, const uint16_t *str) {
             int used = PortA11y_GameTag(str + i, word, sizeof(word));
             if (used > 0) {
                 i += used - 1;
+                tagged |= word[0] != '\0'; /* (a colour or <UB0> says nothing: the line is still the game's English) */
                 if (word[0] != '\0' && n + 1 + (int)strlen(word) < cap) {
                     n += snprintf(out + n, cap - n, "%s%s", n > 0 ? " " : "", word);
                     space = 1;
@@ -925,5 +926,7 @@ int PortA11y_Utf8(char *out, int cap, const uint16_t *str) {
     if (cap > 0) {
         out[n] = '\0';
     }
-    return own_words(out, translated_line(out, cap, n), cap);
+    /* (a line with a button tag is not the game's English line any more: its words are already the language's and
+       depend on the controller, so it is not looked up; "Start" alone would be taken for the menu's word) */
+    return own_words(out, tagged ? n : translated_line(out, cap, n), cap);
 }

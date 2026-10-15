@@ -1476,6 +1476,17 @@ void frame_keys(ImGuiContext *ctx, ImGuiContextHook *) {
     sFrame++;
 }
 
+// Before the frame (NewFramePre): whether the controller's focus is inside a region (the bindings table), in which
+// Circle / B leaves the region (ImGui's NavUpdateCancelRequest, the same test) and must not also close the window,
+// which ui.cpp does with that button in the same frame (A11yUi_InRegion). Only with the speaker on.
+bool sInRegion;
+
+void frame_region(ImGuiContext *ctx, ImGuiContextHook *) {
+    ImGuiContext &g = *ctx;
+    sInRegion = PortA11y_On() && g.NavWindow != NULL && g.NavWindow != g.NavWindow->RootWindow &&
+                !(g.NavWindow->RootWindowForNav->Flags & ImGuiWindowFlags_Popup) && g.NavWindow->RootWindowForNav->ParentWindow != NULL;
+}
+
 void frame_begin(ImGuiContext *ctx, ImGuiContextHook *) {
     ImGuiContext &g = *ctx;
     if (!PortA11y_On() || g.LogEnabled || g.CurrentWindow == NULL) {
@@ -1561,6 +1572,10 @@ void A11yUi_Init(void) {
     hook.Callback = frame_keys;
     ImGui::AddContextHook(ImGui::GetCurrentContext(), &hook);
     hook = ImGuiContextHook();
+    hook.Type = ImGuiContextHookType_NewFramePre;
+    hook.Callback = frame_region;
+    ImGui::AddContextHook(ImGui::GetCurrentContext(), &hook);
+    hook = ImGuiContextHook();
     hook.Type = ImGuiContextHookType_NewFramePost;
     hook.Callback = frame_begin;
     ImGui::AddContextHook(ImGui::GetCurrentContext(), &hook);
@@ -1568,6 +1583,11 @@ void A11yUi_Init(void) {
     hook.Type = ImGuiContextHookType_EndFramePre;
     hook.Callback = frame_end;
     ImGui::AddContextHook(ImGui::GetCurrentContext(), &hook);
+}
+
+// 1 while the controller's focus is inside a region (frame_region): Circle / B leaves it, and only that.
+int A11yUi_InRegion(void) {
+    return sInRegion ? 1 : 0;
 }
 
 // The Accessibility tab is there only with the accessibility on.

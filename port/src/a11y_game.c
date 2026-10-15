@@ -2926,6 +2926,7 @@ extern struct { char unk0[0x28]; uint32_t GAME_PTR battle; } GAME_PTR gCommonRes
 /* include/battle/battle.h: BattleWork, its flags and `running` (see battle_watch below). */
 extern struct { char unk0[0x19F0]; uint64_t flags; int running; } gBattleWork;
 #define BATTLE_FLAG_PAUSE_MENU 0x4000 /* the pause menu is open */
+#define BATTLE_FLAG_PAUSE 0x100 /* the fight is frozen (offline, set with the pause menu) */
 
 /* gs/net.c: 1 in an online match, and which player this copy plays there. src/battle/hud_e_d.c: the port whose
    player opened the pause menu (it only reads). */
@@ -3651,5 +3652,6 @@ void PortA11y_GameTick(void) {
     shown_text();
     fight_gauges();
     fight_cues();
-    PortA11y_FightAlerts(fighting() && btl_menu_shown() == NULL);
+    /* (BATTLE_FLAG_PAUSE: the fight frozen; online a pause menu does not freeze it, and the rival's is not this player's) */
+    PortA11y_FightAlerts(fighting() && btl_menu_shown() == NULL && !(gBattleWork.flags & BATTLE_FLAG_PAUSE));
 }

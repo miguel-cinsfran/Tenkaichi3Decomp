@@ -72,6 +72,8 @@ static const struct { uint16_t name[5]; int what; } kIcons[] = {
 };
 
 static int sPlayer = -1; /* whose controller names the buttons: 0 or 1, -1 whoever holds one (a11y_skills.c sets it) */
+static char sNoted[16][16]; /* the unknown icon names written to the log already */
+static int sNotedCount;
 
 void PortA11y_TextPlayer(int player) {
     sPlayer = player;
@@ -114,7 +116,7 @@ static void icon_word(const A11yIconName GAME_PTR name, char *out, int cap) {
     static const char *const kMarks[] = {"Left stick", "Right stick", "D-pad"};
     const char *word = NULL;
     uint16_t chars[4];
-    int len = name->len < 4 ? name->len : 4, i, n = 0;
+    int len = name->len < 4 ? name->len : 4, i, n = 0, known;
     char note[96];
 
     for (i = 0; i < len; i++) {
@@ -135,6 +137,7 @@ static void icon_word(const A11yIconName GAME_PTR name, char *out, int cap) {
         snprintf(out, cap, "%s", word);
         return;
     }
+    known = i < (int)(sizeof(kIcons) / sizeof(kIcons[0])); /* (a known button with nothing bound to it: said by its name) */
     for (i = 0; i < len && n < cap - 4; i++) { /* (UTF-8 of the name) */
         uint16_t c = chars[i];
         if (c < 0x80) {
@@ -149,8 +152,13 @@ static void icon_word(const A11yIconName GAME_PTR name, char *out, int cap) {
         }
     }
     out[n] = '\0';
-    snprintf(note, sizeof(note), "icon name not known: %s", out);
-    PortA11y_Note(note);
+    for (i = 0; !known && i < sNotedCount && strcmp(sNoted[i], out) != 0; i++) {
+    }
+    if (!known && i == sNotedCount && sNotedCount < 16) { /* (once per name: a string can be read every blank) */
+        snprintf(sNoted[sNotedCount++], sizeof(sNoted[0]), "%s", out);
+        snprintf(note, sizeof(note), "icon name not known: %s", out);
+        PortA11y_Note(note);
+    }
 }
 
 /* The icons named in one list of a tag (s..end: names run together), as words separated by spaces. */
@@ -225,10 +233,13 @@ int PortA11y_GameTag(const uint16_t *at, char *out, int cap) {
         }
         return (int)(end - at) + 1;
     }
+    if (starts(at + 1, "COL=DEF>")) { /* (FontTag_Color: "DEF", or eight capital hex digits; else it is text) */
+        return 9;
+    }
     if (starts(at + 1, "COL=")) {
-        for (i = 5; i < 16 && at[i] != 0 && at[i] != '>'; i++) {
+        for (i = 5; i < 13 && ((at[i] >= '0' && at[i] <= '9') || (at[i] >= 'A' && at[i] <= 'F')); i++) {
         }
-        return at[i] == '>' ? i + 1 : 0;
+        return i == 13 && at[13] == '>' ? 14 : 0;
     }
     if (starts(at + 1, "UB0>")) {
         return 5;

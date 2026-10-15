@@ -30,7 +30,7 @@ extern int PortA11y_On(void);
 
 enum { TONE_DISTANCE, TONE_DISTANCE_CLOSE, TONE_EDGE_WALL, TONE_EDGE_TOP, TONE_EDGE_FLOOR, TONE_RING, TONE_HEALTH, TONE_KINDS };
 
-static SDL_AudioStream *sStream[TONE_KINDS];
+static SDL_AudioStream *sStream[TONE_KINDS + 1]; /* (one per kind, and player 2's health beeps a second one) */
 static int sTried;
 
 /* A partial of `freq` Hz from sample `at`, `len` samples long, fading in and out, added to out. */
@@ -68,13 +68,13 @@ static int tone_wave(int kind, int pitch, float *out) {
         add_tone(out, 50 * ms, 25 * ms, base, 0.6f, 1);
         len = 75 * ms;
         break;
-    case TONE_EDGE_WALL: /* a hum of 120 ms: A2 with a fifth over it */
+    case TONE_EDGE_WALL: /* a hum of 80 ms (shorter than the closest spacing, 100 ms): A2 with a fifth over it */
     case TONE_EDGE_TOP:
     case TONE_EDGE_FLOOR: {
         float f = kind == TONE_EDGE_WALL ? 110.0f : kind == TONE_EDGE_TOP ? 220.0f : 73.42f;
-        add_tone(out, 0, 120 * ms, f, 0.5f, 1);
-        add_tone(out, 0, 120 * ms, f * 1.5f, 0.25f, 0);
-        len = 120 * ms;
+        add_tone(out, 0, 80 * ms, f, 0.5f, 1);
+        add_tone(out, 0, 80 * ms, f * 1.5f, 0.25f, 0);
+        len = 80 * ms;
         break;
     }
     case TONE_RING: /* two low knocks */
@@ -92,7 +92,8 @@ static int tone_wave(int kind, int pitch, float *out) {
 }
 
 /* Plays a tone: kind as above, side 0 player 1 (left), 1 player 2 (right), -1 the middle; pitch in semitones;
-   loud in percent of the cues' volume. A tone of the same kind still waiting is dropped: the newest says the most. */
+   loud in percent of the cues' volume. A tone of the same kind (and side, for health) still waiting for more than
+   half of the new one is dropped: the newest says the most; a shorter tail is let finish, not cut mid-wave. */
 void PortA11y_Tone(int kind, int side, int pitch, int loud) {
     static float wave[TONE_MAX];
     static int16_t pcm[TONE_MAX * 2];
@@ -112,14 +113,15 @@ void PortA11y_Tone(int kind, int side, int pitch, int loud) {
         spec.format = SDL_AUDIO_S16;
         spec.channels = 2;
         spec.freq = TONE_RATE;
-        for (k = 0; k < TONE_KINDS; k++) {
+        for (k = 0; k <= TONE_KINDS; k++) {
             if ((sStream[k] = SDL_CreateAudioStream(&spec, NULL)) != NULL && !SDL_BindAudioStream(dev, sStream[k])) {
                 SDL_DestroyAudioStream(sStream[k]);
                 sStream[k] = NULL;
             }
         }
     }
-    if (sStream[kind] == NULL) {
+    k = kind == TONE_HEALTH && side == 1 ? TONE_KINDS : kind;
+    if (sStream[k] == NULL) {
         return;
     }
     gain = 0.25f * (float)PortA11y_CueVolume() / 100.0f * (float)(loud > 100 ? 100 : loud) / 100.0f;
@@ -130,10 +132,10 @@ void PortA11y_Tone(int kind, int side, int pitch, int loud) {
         pcm[i * 2] = (int16_t)(wave[i] * gain * l * 32767.0f);
         pcm[i * 2 + 1] = (int16_t)(wave[i] * gain * r * 32767.0f);
     }
-    if (SDL_GetAudioStreamQueued(sStream[kind]) > 0) {
-        SDL_ClearAudioStream(sStream[kind]);
+    if (SDL_GetAudioStreamQueued(sStream[k]) > len * 2) {
+        SDL_ClearAudioStream(sStream[k]);
     }
-    SDL_PutAudioStreamData(sStream[kind], pcm, len * 4);
+    SDL_PutAudioStreamData(sStream[k], pcm, len * 4);
 }
 
 /* For herramientas/avisos-wav.sh-like checks without the game: the 16-bit stereo samples of a tone at full volume,

@@ -86,6 +86,7 @@ void Port_LobbyCancel(void);
 void Port_LobbyLaunch(void);
 }
 void A11yUi_Init(void); int A11yUi_Tabs(void); void A11yUi_Tab(void); // a11y_ui.cpp: the window read aloud, its own tab
+int A11yUi_InRegion(void); // a11y_ui.cpp: the focus is in a region (the bindings table): Circle leaves it, not the window
 static bool sReady, sOpen;
 static bool sNet;                              // the open window is the online screen (Dragon Net Battle), not the settings
 static int sForceTab = -1;                     // BT3_UI_OPEN=<tab>: open at start on that tab (testing)
@@ -1680,7 +1681,7 @@ static void build(void) {
         sCapKind = 0;
         gPortInputCapture = 0;
     }
-    if (pad_pressed(ImGuiKey_GamepadFaceRight)) { // Circle / B: out of the window
+    if (pad_pressed(ImGuiKey_GamepadFaceRight) && !A11yUi_InRegion()) { // Circle / B: out of the window
         open = false;
     }
     if (sForceTab < 0 && (pad_pressed(ImGuiKey_GamepadL1) || pad_pressed(ImGuiKey_GamepadR1))) {
