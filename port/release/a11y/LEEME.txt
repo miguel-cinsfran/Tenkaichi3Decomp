@@ -14,10 +14,10 @@ Si Windows dice "Windows protegió su PC", elige "Más información" y después 
 Hace falta tu propia imagen de disco de la versión de Estados Unidos (SLUS-21678), con los programas del juego sin modificar. No compartas ni pidas imágenes de disco.
 
 En el juego:
-- Select del control (Create en un DualSense, Vista en un control de Xbox), solo: en una pelea te da tu vida; dos veces rápido, la del rival. Si juegan dos personas, cada una oye primero la suya con su propio control. Fuera de una pelea repite el último mensaje. Con el lector activo, Select ya no mueve la cámara en la pelea.
+- Select del control (Create en un DualSense, Vista en un control de Xbox), solo: en una pelea te da tu vida; dos veces rápido, la del rival. Si juegan dos personas, cada una oye primero la suya con su propio control. Fuera de una pelea repite el último mensaje. Un control de GameCube no tiene Select: ahí sirven F2, F3 y F4. Con el lector activo, Select ya no mueve la cámara en la pelea.
 - Al principio la vida se oye como dos pitidos, más fuertes cuanta menos vida queda. Para que el lector diga la vida, el ki y el blast: ventana de ajustes, pestaña Accesibilidad, "Estado a pedido", y elige "Lector de pantalla" o "Sonido y lector de pantalla".
 - En el teclado: F2 repite el último mensaje. F3 y F4 dan el estado del jugador 1 y del jugador 2.
-- La ventana de ajustes se abre con F1, o con los dos botones del medio del control a la vez (Create y Options en un DualSense, Vista y Menú en un control de Xbox). La palanca derecha cambia el valor que tiene el foco.
+- La ventana de ajustes se abre con F1, o con los dos botones del medio del control a la vez (Create y Options en un DualSense, Vista y Menú en un control de Xbox). En un deslizador, la palanca derecha baja o sube el valor.
 - Su pestaña Accesibilidad tiene los avisos de la pelea: distancia al rival, borde del escenario, vida, transformación y ataque definitivo, y estado a pedido, con sus volúmenes. Los de distancia, borde y vida vienen apagados: se encienden ahí.
 - En el menú de pausa, la lista de técnicas se lee de a una técnica, con los botones de tu control.
 

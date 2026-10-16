@@ -173,6 +173,10 @@ def take_prism(out, lic):
                 shutil.copy2(p, dest / p.relative_to(src))
     if not (dest / "LICENSES/prism/mpl-2.0.txt").is_file() and not (dest / "LICENSE").is_file():
         sys.exit("BT3_PRISM: Prism's own licence (LICENSES/prism/mpl-2.0.txt) was not found")
+    others = [p for p in (dest / "LICENSES").rglob("*") if p.is_file() and p.relative_to(dest / "LICENSES").parts[0] != "prism"] \
+        if (dest / "LICENSES").is_dir() else []
+    if not (dest / "NOTICE").is_file() or not others:
+        sys.exit("BT3_PRISM: Prism's NOTICE and the licences of the code compiled into it (LICENSES/) were not found")
     (out / name).write_bytes(data)
     for p in list(dest.rglob("*")):  # (plain text the Notepad of any Windows opens: a .txt name, CRLF line ends)
         if p.is_file():

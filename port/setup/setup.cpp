@@ -83,7 +83,34 @@ static bool sStopAsked;                       // Cancel was pressed in this run:
 // The most telling failure of the folder's images in this round (look_for_disc starts one), said at its end in place of
 // the last image's, which can be any other file of the folder; and the images that failed the disc step already.
 static struct Best { int rank = -1; std::string error, detail, iso; } sBest;
-static std::vector<std::pair<std::string, Sint64>> sBad;
+struct Stamp { std::string path; Sint64 size; SDL_Time time; };
+static std::vector<Stamp> sBad;   // images that failed the disc step, as they were then
+static std::vector<Stamp> sKnown; // images the setup has looked at or tried: the folder's watch takes only others
+static bool sDialogOpen;          // the Browse dialog is open (sDialogLock)
+
+// A file's path, size and modify time now (size -1: not there): an image that changed is another image.
+static Stamp stamp(const std::string &path) {
+    SDL_PathInfo info;
+    bool ok = SDL_GetPathInfo(path.c_str(), &info) && info.type == SDL_PATHTYPE_FILE;
+    return {path, ok ? (Sint64)info.size : -1, ok ? info.modify_time : 0};
+}
+
+static bool listed(const std::vector<Stamp> &list, const std::string &path) {
+    Stamp now = stamp(path);
+    for (auto &b : list) {
+        if (b.path == path && b.size == now.size && b.time == now.time) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void remember(std::vector<Stamp> &list, const std::string &path) {
+    if (!listed(list, path)) {
+        list.push_back(stamp(path));
+    }
+}
+
 static const ImVec4 kAccent(0.96f, 0.55f, 0.13f, 1.0f), kGreen(0.36f, 0.80f, 0.45f, 1.0f), kRed(0.93f, 0.36f, 0.33f, 1.0f),
     kDim(0.60f, 0.63f, 0.70f, 1.0f);
 
@@ -148,6 +175,9 @@ static void start_install() {
     if (sChosen) {
         sCandidates.clear(); // (the player's own choice: no image of the folder is tried after it)
         sBest = Best();
+    }
+    if (sRelease) {
+        remember(sKnown, sIso); // (the watch does not take it again by itself)
     }
     const char *args[8];
     SDL_PropertiesID props = SDL_CreateProperties();
@@ -354,6 +384,7 @@ static void SDLCALL dialog_done(void *userdata, const char *const *files, int fi
         sDialogResult = files[0];
         sDialogReady = true;
     }
+    sDialogOpen = false;
 }
 
 static void heading(const char *title, const char *sub) {
@@ -408,6 +439,10 @@ static void page_pick() {
     }
     ImGui::SameLine();
     if (ImGui::Button("Browse...", ImVec2(120.0f, 0.0f))) {
+        {
+            std::lock_guard<std::mutex> lock(sDialogLock);
+            sDialogOpen = true;
+        }
         SDL_ShowOpenFileDialog(dialog_done, NULL, sWindow, filters, 2, NULL, false);
     }
     if (sIso[0] != '\0' && !ok) {
@@ -629,25 +664,18 @@ static const char kNoDisc[] = "No disc image was found. Copy your disc image of 
                               "that ends in .iso, into the same folder as this program: it is found there by itself once it "
                               "is copied. Escape closes.";
 
-static Sint64 file_size(const std::string &path) {
-    SDL_PathInfo info;
-    return SDL_GetPathInfo(path.c_str(), &info) && info.type == SDL_PATHTYPE_FILE ? (Sint64)info.size : -1;
-}
-
-static bool known_bad(const std::string &path) {
-    for (auto &b : sBad) {
-        if (b.first == path && b.second == file_size(path)) {
-            return true;
-        }
-    }
-    return false;
-}
+static const char kNotGame[] = "The disc images found are not the game's. Copy your disc image of Dragon Ball Z Budokai "
+                               "Tenkaichi 3, the file that ends in .iso, into the same folder as this program: it is found "
+                               "there by itself once it is copied. Escape closes.";
 
 // The folder's images, tried in turn; those that failed already last (the player may have put the right one there).
 static void look_for_disc() {
     sBest = Best();
     sCandidates = Voice_FindIsos(sRoot);
-    std::stable_partition(sCandidates.begin(), sCandidates.end(), [](const std::string &p) { return !known_bad(p); });
+    std::stable_partition(sCandidates.begin(), sCandidates.end(), [](const std::string &p) { return !listed(sBad, p); });
+    for (auto &p : sCandidates) {
+        remember(sKnown, p);
+    }
     if (!start_found()) {
         sPage = PAGE_PICK;
         Voice_Say(Voice_Tr(kNoDisc), true);
@@ -655,31 +683,37 @@ static void look_for_disc() {
 }
 
 // While the setup waits for a disc image (the first page, or after the folder's images were not the game's), the
-// folder is looked at every two seconds, and an image that was not there, or not finished, is installed by itself
-// once its copy has ended: the same size and time at two looks in a row, and it opens for reading (Windows refuses
-// that while the copy still writes it). Images that failed already are left out. A child is told to copy the image
-// there, and Enter in the file window opens the image instead of reaching this one.
+// folder is looked at every two seconds, and an image that is new there, or changed, since the setup last looked at
+// or tried it is installed by itself once its copy has ended: the same size and time at two looks in a row, and it
+// opens for reading (Windows refuses that while the copy still writes it). A child is told to copy the image there,
+// and Enter in the file window opens the image instead of reaching this one. Not after Cancel on that page, not
+// while the Browse dialog is open, and not over an image the player chose.
 static Uint64 sWatchAt;
 
 static void watch_folder() {
-    static std::vector<std::pair<std::string, std::pair<Sint64, SDL_Time>>> seen;
-    bool waiting = sPage == PAGE_PICK || (sPage == PAGE_FAILED && disc_failed());
-    std::vector<std::pair<std::string, std::pair<Sint64, SDL_Time>>> now;
+    static std::vector<Stamp> seen;
+    bool waiting = sPage == PAGE_PICK || (sPage == PAGE_FAILED && disc_failed() && !sStopAsked), dialog;
+    std::vector<Stamp> now;
     std::vector<std::string> ready;
 
-    if (!sRelease || !waiting || (sChosen && file_exists(sIso)) || SDL_GetTicks() < sWatchAt) {
+    {
+        std::lock_guard<std::mutex> lock(sDialogLock);
+        dialog = sDialogOpen;
+    }
+    if (!sRelease || !waiting || dialog || (sChosen && file_exists(sIso)) || SDL_GetTicks() < sWatchAt) {
         return;
     }
     sWatchAt = SDL_GetTicks() + 2000;
     for (auto &path : Voice_FindIsos(sRoot)) {
-        SDL_PathInfo info;
-        if (!SDL_GetPathInfo(path.c_str(), &info) || info.size == 0 || known_bad(path)) {
+        Stamp st = stamp(path);
+        if (st.size <= 0 || listed(sKnown, path)) {
             continue;
         }
-        now.push_back({path, {(Sint64)info.size, info.modify_time}});
+        now.push_back(st);
         for (auto &before : seen) {
             SDL_IOStream *io;
-            if (before.first == path && before.second == now.back().second && (io = SDL_IOFromFile(path.c_str(), "rb")) != NULL) {
+            if (before.path == path && before.size == st.size && before.time == st.time &&
+                (io = SDL_IOFromFile(path.c_str(), "rb")) != NULL) {
                 SDL_CloseIO(io);
                 ready.push_back(path);
             }
@@ -703,7 +737,17 @@ static void say_failure(bool cut) {
 // Where the setup is, said again when its window comes back to the front (a second setup brings it there).
 static void say_page() {
     switch (sPage) {
-    case PAGE_PICK: Voice_Say(Voice_Tr(sRelease ? kNoDisc : "Escape closes."), false); break;
+    case PAGE_PICK:
+        if (!sRelease) {
+            Voice_Say(Voice_Tr("Escape closes."), false);
+        } else if (sChosen && file_exists(sIso)) {
+            char said[1024];
+            snprintf(said, sizeof(said), Voice_TrFormat("Your disc image is %s. Enter installs it, Escape closes."), base_name(sIso).c_str());
+            Voice_Say(said, false);
+        } else {
+            Voice_Say(Voice_Tr(sBad.empty() ? kNoDisc : kNotGame), false);
+        }
+        break;
     case PAGE_RUN: Voice_Say(Voice_Tr("Still installing. Please wait."), false); break;
     case PAGE_DONE: Voice_Say(Voice_Tr("Ready: the game is installed. Enter opens it, Escape closes."), false); break;
     case PAGE_FAILED: say_failure(false); break;
@@ -726,7 +770,7 @@ static void page_changed(Page from) {
             // PS2 game, then no disc image at all), the more it helps the player: that one is said at the end
             int rank = sError.find("checksums") != std::string::npos ? 3 : sError.find("read to its end") != std::string::npos ? 2
                      : sError.find("USA release") != std::string::npos ? 1 : 0;
-            sBad.push_back({sIso, file_size(sIso)});
+            remember(sBad, sIso);
             if (rank > sBest.rank) {
                 sBest = {rank, sError, sErrorDetail, sIso};
             }
@@ -1124,23 +1168,31 @@ int main(int argc, char **argv) {
         }
         {
             std::lock_guard<std::mutex> lock(sDialogLock);
-            if (sDialogReady) {
-                SDL_strlcpy(sIso, sDialogResult.c_str(), sizeof(sIso));
-                sChosen = true;
+            if (sDialogReady) { // (on the first page only: an install that started meanwhile is not credited to it)
+                if (sPage == PAGE_PICK && !sNative && sProc == NULL) {
+                    SDL_strlcpy(sIso, sDialogResult.c_str(), sizeof(sIso));
+                    sChosen = true;
+                }
                 sDialogReady = false;
             }
         }
         pump_install();
-        watch_folder();
         if (sPage != sShownPage) {
             Page from = sShownPage;
             sShownPage = sPage;
             ImGui::SetNavCursorVisible(false); // (a button Tab reached on the page before is not there: Enter is the page's)
             page_changed(from);
         }
+        if (sPage == sShownPage) { // (never on a run's end that has not been told and counted yet)
+            watch_folder();
+        }
         if (sAutoPlayAt != 0 && SDL_GetTicks() >= sAutoPlayAt) {
             sAutoPlayAt = 0;
-            launch_game();
+            if (SDL_GetWindowFlags(sWindow) & SDL_WINDOW_INPUT_FOCUS) {
+                launch_game();
+            } else { // (Windows would not bring the game's window to the front from a setup behind others)
+                Voice_Say(Voice_Tr("Ready: the game is installed. Enter opens it, Escape closes."), true);
+            }
         }
         if (sUseGl) {
             ImGui_ImplOpenGL3_NewFrame();

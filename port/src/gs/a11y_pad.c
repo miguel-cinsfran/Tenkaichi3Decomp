@@ -12,19 +12,19 @@
  * settings window, text with no player), the one a button was last pressed on, and else player 1's.
  *
  * Called from the game's thread (a11y_text.c, a11y_skills.c) and the render thread (a11y_ui.cpp); everything here
- * only asks SDL and the bindings, and the last controller used is one atomic value.
+ * only asks SDL and the bindings, each call with values of its own, and the last controller used is one atomic value.
  *
  * Here too the Select button (Create on a DualSense, Share on a DualShock 4, View on an Xbox controller, Back on a 360
- * one, Minus on a Nintendo one): every controller has it in the same place. A tap of it, pressed and let go within half
- * a second with no other button of that controller pressed in between (Start with it opens the settings window) and
- * the settings window closed, asks for the gauges in a fight and a second tap within 0.4 s for the rival's; outside a
- * fight it says the last message again (a11y.c, PortA11y_SelectTap). In a fight the game reads Select for one thing
- * only, to step the fighter's camera to the next of its three distances (src/battle/btl_char_cam_modes.c,
- * ChrCam_UpdateInput, the literal 0x800000 = BTLB_SELECT), and the fighters' sounds are as loud as they are near the
- * camera (btl_char_flag_snd.c, BtlCharSnd_CalcVolPan): each tap made the fight louder or softer at once. So while the
- * reader is on, in a fight, the game does not get Select (gs_input.c asks PortA11y_TakesSelect), as the player who
- * asked for this wanted. (The left stick's click was tried before, but players use it in fights, for the
- * transformations.)
+ * one, Minus on a Nintendo one; a GameCube controller has none, and F2 to F4 do the same there). A tap of it, pressed
+ * and let go within half a second with no other button of that controller pressed in between (Start with it opens
+ * the settings window) and the settings window closed, asks for the gauges in a fight and a second tap within 0.4 s
+ * for the rival's; outside a fight it says the last message again (a11y.c, PortA11y_SelectTap). In a fight the game
+ * reads Select for one thing only, to step the fighter's camera to the next of its three distances
+ * (src/battle/btl_char_cam_modes.c, ChrCam_UpdateInput, the literal 0x800000 = BTLB_SELECT), and the fighters' sounds
+ * are as loud as they are near the camera (btl_char_flag_snd.c, BtlCharSnd_CalcVolPan): each tap made the fight louder
+ * or softer at once. So while the reader is on, in a fight, the game does not get Select (gs_input.c asks
+ * PortA11y_TakesSelect), as the player who asked for this wanted. (The left stick's click, tried before, was given
+ * up at the player's request: in a fight it goes with R3, which transforms, and L3 with R3 switches the member.)
  */
 #include <SDL3/SDL.h>
 #include <stdio.h>
@@ -153,19 +153,21 @@ static SDL_JoystickID pad_id(int player) {
     return id;
 }
 
-static SDL_GamepadType sType; /* (the type of the controller family() last looked at: its face buttons' labels) */
-
 /* The family of a player's controller (player < 0: the one in use); FAMILY_NONE: the keyboard. */
-static int family(int player) {
+static int family(int player, SDL_GamepadType *type) {
     SDL_JoystickID id = pad_id(player);
 
-    sType = id == 0 ? SDL_GAMEPAD_TYPE_UNKNOWN : SDL_GetGamepadTypeForID(id);
-    return id == 0 ? FAMILY_NONE : family_of(sType);
+    SDL_GamepadType t = id == 0 ? SDL_GAMEPAD_TYPE_UNKNOWN : SDL_GetGamepadTypeForID(id);
+
+    if (type != NULL) {
+        *type = t; /* (its face buttons' labels: per call, as both threads ask) */
+    }
+    return id == 0 ? FAMILY_NONE : family_of(t);
 }
 
 /* 1 PlayStation, 2 Xbox, 3 Nintendo, 0 none: for the log and the settings window. */
 int PortA11y_PadFamily(int player) {
-    int f = family(player);
+    int f = family(player, NULL);
 
     return f == FAMILY_NONE ? 0 : f <= FAMILY_PS5 ? 1 : f == FAMILY_NINTENDO || f == FAMILY_GAMECUBE ? 3 : 2;
 }
@@ -175,7 +177,7 @@ static const char *tr_button(const char *label) {
 }
 
 /* An SDL controller button (or PORT_PAD_LT / PORT_PAD_RT) as the family's maker names it. */
-static const char *source_name(int f, int src) {
+static const char *source_name(int f, SDL_GamepadType type, int src) {
     int ps = f >= FAMILY_PS3 && f <= FAMILY_PS5, nin = f == FAMILY_NINTENDO, gc = f == FAMILY_GAMECUBE;
 
     switch (src) {
@@ -188,14 +190,14 @@ static const char *source_name(int f, int src) {
         static const char *const kLabels[] = {NULL, "A", "B", "X", "Y", "Cross", "Circle", "Square", "Triangle"};
         static const char *const kPs[] = {"Cross", "Circle", "Square", "Triangle"}, *const kXbox[] = {"A", "B", "X", "Y"},
                                  *const kNin[] = {"B", "A", "Y", "X"};
-        int i = src - SDL_GAMEPAD_BUTTON_SOUTH, label = (int)SDL_GetGamepadButtonLabelForType(sType, (SDL_GamepadButton)src);
+        int i = src - SDL_GAMEPAD_BUTTON_SOUTH, label = (int)SDL_GetGamepadButtonLabelForType(type, (SDL_GamepadButton)src);
         if (label > 0 && label < (int)(sizeof(kLabels) / sizeof(kLabels[0]))) {
             return tr_button(kLabels[label]);
         }
         return tr_button(ps ? kPs[i] : nin ? kNin[i] : kXbox[i]);
     }
     case SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:
-        return tr_button(ps ? "L1" : nin ? "L" : gc ? "Z" : "LB");
+        return tr_button(ps ? "L1" : nin ? "L" : gc ? "ZL" : "LB"); /* (none on the original; ZL on the Switch 2's) */
     case SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER: /* (a GameCube controller's Z: SDL puts its L and R on the triggers) */
         return tr_button(ps ? "R1" : nin ? "R" : gc ? "Z" : "RB");
     case PORT_PAD_LT:
@@ -234,9 +236,10 @@ static const char *source_name(int f, int src) {
 /* A controller button of the settings window's list (SDL button or trigger) for the controller in use; NULL when it
    is none of those (gs/a11y_ui.cpp says the window's own name then). */
 const char *PortA11y_PadSourceName(int src) {
-    int f = family(-1);
+    SDL_GamepadType type;
+    int f = family(-1, &type);
 
-    return f == FAMILY_NONE ? NULL : source_name(f, src);
+    return f == FAMILY_NONE ? NULL : source_name(f, type, src);
 }
 
 /* What a game action (gs_input.c's order: 0..15 the pad's buttons, 16..23 the sticks' directions) is for a player
@@ -245,6 +248,7 @@ const char *PortA11y_PadSourceName(int src) {
 const char *PortA11y_ActionName(int player, int action) {
     static const char *const kSticks[8] = {"Left stick up", "Left stick down", "Left stick left", "Left stick right",
                                            "Right stick up", "Right stick down", "Right stick left", "Right stick right"};
+    SDL_GamepadType type;
     int p = player & 1, f, src, key;
 
     if (player < 0) { /* (the player whose controller is in use, so that its name and its bindings agree) */
@@ -252,7 +256,7 @@ const char *PortA11y_ActionName(int player, int action) {
         player = p < 0 ? 0 : p;
         p = player;
     }
-    f = family(player);
+    f = family(player, &type);
 
     if (action < 0 || action >= PORT_ACTIONS) {
         return NULL;
@@ -262,7 +266,7 @@ const char *PortA11y_ActionName(int player, int action) {
             return tr_button(kSticks[action - PORT_PAD_BUTTONS]);
         }
         src = PortInput_PadButtons(p)[action];
-        return src < 0 ? NULL : source_name(f, src);
+        return src < 0 ? NULL : source_name(f, type, src);
     }
     key = PortInput_Keys(p)[action];
     return key == 0 ? NULL : SDL_GetScancodeName((SDL_Scancode)key);

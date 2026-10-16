@@ -1327,3 +1327,7 @@ a9eaece1e6cb5e8b	La pelea de prueba del juego no terminó. Todo lo que escribió
 b279f00490e62061	El instalador ya está abierto.
 # Cancelled. Finished steps are kept; Install continues from where it stopped.
 5ee3354d1585478a	Cancelado. Los pasos terminados se guardan; la instalación sigue desde donde se detuvo.
+# The disc images found are not the game's. Copy your disc image of Dragon Ball Z Budokai Tenkaichi 3, the file that ends in .iso, into the same folder as this program: it is found there by itself once it is copied. Escape closes.
+69e8801a5e26e7a2	Las imágenes de disco que encontré no son del juego. Copia tu imagen de disco de Dragon Ball Z Budokai Tenkaichi 3, el archivo que termina en .iso, en la misma carpeta que este programa: la encuentro sola cuando termine de copiarse. Escape cierra.
+# Your disc image is %s. Enter installs it, Escape closes.
+a8930f02463dc899	Tu imagen de disco es %s. Enter la instala, Escape cierra.
