@@ -1641,6 +1641,9 @@ void A11yUi_Tab(void) {
                               "Select twice quickly: the rival's. F3 and F4 on the keyboard: player 1's and player 2's.\n"
                               "Two beeps, louder the less health is left, or health, ki and blast said by the screen\n"
                               "reader, or both. Outside a fight, Select says the last message again."},
+        {"Important moments", "Told by themselves, for both players: health down to two bars and then to one, the ki\n"
+                              "full, max power. By the screen reader, by a sound (two beeps for health, three notes\n"
+                              "going up for the ki, higher for max power), or both."},
     };
     for (int i = 0; i < (int)(sizeof(kAlerts) / sizeof(kAlerts[0])); i++) {
         int lo = i == 4 ? 1 : 0;
@@ -1653,6 +1656,12 @@ void A11yUi_Tab(void) {
         }
         ImGui::SetItemTooltip("%s", kAlerts[i].tip);
     }
+    bool names = PortA11y_AlertMode(6) != 0; // (a11y_fight.c ALERT_NAMES: off, or by the screen reader)
+    if (ImGui::Checkbox("Technique names", &names)) {
+        PortA11y_SetAlertMode(6, names ? 2 : 0);
+        Port_SettingsWrite();
+    }
+    ImGui::SetItemTooltip("In a fight, the screen reader says the text the game shows: the names of the techniques.");
     ImGui::Spacing();
     // (A button, not a line of text: a line after the last item would be said with the next one, Exit game)
     static const char kReader[] = "The screen reader's volume is set in the screen reader itself. With NVDA: NVDA+Control+left "

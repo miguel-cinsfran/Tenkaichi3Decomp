@@ -3390,8 +3390,11 @@ void PortA11y_FontText(int kind, int arg, int flags) {
 
 /* The strings that showed up on a screen no reader has, in the order they were first drawn, once they have
    stayed TEXT_STABLE blanks: together as one message. Not the message window's line (msg_window) nor a line a
-   voice says. In a fight with no menu over it (the HUD's technique names), only noted in the log: the gauges
-   are said on request instead (fight_gauges). */
+   voice says. In a fight with no menu over it (the HUD's technique names), said as in the first version of this
+   reader, which the player asked for again, unless the Accessibility tab's "Technique names" is off (then only
+   noted in the log). */
+extern int PortA11y_TechniqueNames(void); /* a11y_fight.c */
+
 static void shown_text(void) {
     A11yMsgWin GAME_PTR w = gMsgWin;
     uint32_t skip = w != NULL ? (uint32_t)(uintptr_t)w->str : 0;
@@ -3443,7 +3446,7 @@ static void shown_text(void) {
             used += snprintf(text + used, sizeof(text) - used, "%s%s", used > 0 && strchr(".!?:", text[used - 1]) == NULL ? ". " : used > 0 ? " " : "", line);
         }
     }
-    if (text[0] != '\0' && quiet) {
+    if (text[0] != '\0' && quiet && !PortA11y_TechniqueNames()) {
         snprintf(note, sizeof(note), "in a fight, not said: %s", text);
         PortA11y_Note(note);
     } else if (text[0] != '\0') {

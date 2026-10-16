@@ -59,6 +59,7 @@ extern float BtlCharApi_GetRadius(int objId);
 extern int BtlCharApi_IsClose(int objId); /* fighter flag 0x13: the rival within the game's close range */
 extern int BtlCharApi_GetHp(int objId), BtlCharApi_GetHpMax(int objId);
 extern int BtlCharApi_GetChara(int objId), BtlCharApi_GetActiveMember(int objId);
+extern int BtlCharApi_GetKi(int objId), BtlSide_IsPoweredUp(int side); /* src/battle/btl_capi_b.c, btl_side.c (only read) */
 extern void GAME_PTR BtlChar_FindBySide(int side);
 extern int BtlChar_TestFlag(void GAME_PTR chr, unsigned n);
 extern int BtlStage_IsReady(void);
@@ -96,16 +97,18 @@ extern A11yBound GAME_PTR gEftBound;
 #define HIGH 60.0f        /* inferred: about three fighters' height, "above" / "below" from here */
 
 /* gs/a11y_tones.c */
-enum { TONE_DISTANCE, TONE_DISTANCE_CLOSE, TONE_EDGE_WALL, TONE_EDGE_TOP, TONE_EDGE_FLOOR, TONE_RING, TONE_HEALTH };
+enum { TONE_DISTANCE, TONE_DISTANCE_CLOSE, TONE_EDGE_WALL, TONE_EDGE_TOP, TONE_EDGE_FLOOR, TONE_RING, TONE_HEALTH, TONE_KI };
 
 /* The alerts and how each is told (a bit each: 1 a sound, 2 the screen reader). */
-enum { ALERT_DISTANCE, ALERT_EDGE, ALERT_HEALTH, ALERT_POWER, ALERT_GAUGES, ALERTS };
+enum { ALERT_DISTANCE, ALERT_EDGE, ALERT_HEALTH, ALERT_POWER, ALERT_GAUGES, ALERT_MOMENTS, ALERT_NAMES, ALERTS };
 #define BY_SOUND 1
 #define BY_VOICE 2
+/* (ALERT_MOMENTS: health down to two bars and to one, ki full, max power, told by themselves; ALERT_NAMES: the text
+   the game shows in a fight, the techniques' names, said by the reader (a11y_game.c, shown_text): 0 or BY_VOICE) */
 static const char *const kKeys[ALERTS] = {"a11y_alert_distance", "a11y_alert_edge", "a11y_alert_health", "a11y_alert_power",
-                                          "a11y_gauges"};
-static const int kDefaults[ALERTS] = {0, 0, 0, BY_SOUND, BY_SOUND};
-static int sMode[ALERTS] = {-1, -1, -1, -1, -1};
+                                          "a11y_gauges", "a11y_alert_moments", "a11y_technique_names"};
+static const int kDefaults[ALERTS] = {0, 0, 0, BY_SOUND, BY_SOUND, BY_VOICE, BY_VOICE};
+static int sMode[ALERTS] = {-1, -1, -1, -1, -1, -1, -1};
 
 static int mode(int alert) {
     if (sMode[alert] < 0) {
@@ -118,6 +121,11 @@ static int mode(int alert) {
 /* For the settings window (gs/a11y_ui.cpp): how an alert is told, 0..3 (the gauges: 1..3). */
 int PortA11y_AlertMode(int alert) {
     return alert >= 0 && alert < ALERTS ? mode(alert) : 0;
+}
+
+/* a11y_game.c, shown_text: 1 when the text the game shows in a fight (the techniques' names) is said. */
+int PortA11y_TechniqueNames(void) {
+    return mode(ALERT_NAMES) != 0;
 }
 
 void PortA11y_SetAlertMode(int alert, int value) {
@@ -305,6 +313,70 @@ static void health(int me) {
     }
 }
 
+/* ---- important moments, told by themselves ---- */
+
+#define HP_BAR 10000          /* health per bar (docs/systems/hud.md; a11y_game.c GAUGE_HP_BAR) */
+#define KI_BAR 20000          /* ki per bar, five bars (a11y_game.c GAUGE_KI_BAR) */
+#define KI_FULL (5 * KI_BAR)
+
+/* For each player: health down to two bars and then to one, ki full (said again only after it fell under four bars),
+   max power. A new fighter (a team's next member, a transformation, the next fight) is taken as it is, unsaid. */
+static void moments(void) {
+    static int bars[2], kiFull[2], power[2], who[2];
+    int side, hp, ki, now, full, up, id, m = mode(ALERT_MOMENTS);
+    char text[128];
+
+    for (side = 0; side < 2; side++) {
+        if (BtlCharApi_GetHpMax(side) <= 0) {
+            continue;
+        }
+        hp = BtlCharApi_GetHp(side);
+        ki = BtlCharApi_GetKi(side);
+        now = hp <= 0 ? 0 : hp <= HP_BAR ? 1 : hp <= 2 * HP_BAR ? 2 : 3;
+        full = ki >= KI_FULL ? 1 : ki < KI_FULL - KI_BAR ? 0 : kiFull[side];
+        up = BtlSide_IsPoweredUp(side) != 0;
+        id = (BtlCharApi_GetActiveMember(side) << 16) | (BtlCharApi_GetChara(side) + 1);
+        if (id != who[side]) {
+            who[side] = id;
+            bars[side] = now;
+            kiFull[side] = full;
+            power[side] = up;
+            continue;
+        }
+        if (now < bars[side] && now >= 1) {
+            if (m & BY_SOUND) {
+                PortA11y_Tone(TONE_HEALTH, side, 0, health_loud(hp, BtlCharApi_GetHpMax(side)));
+            }
+            if (m & BY_VOICE) {
+                snprintf(text, sizeof(text), now == 2 ? tr("Player %d: 2 bars of health left") : tr("Player %d: 1 bar of health left"),
+                         side + 1);
+                PortA11y_Say(text, 0);
+            }
+        }
+        if (full && !kiFull[side]) {
+            if (m & BY_SOUND) {
+                PortA11y_Tone(TONE_KI, side, 0, 100);
+            }
+            if (m & BY_VOICE) {
+                snprintf(text, sizeof(text), tr("Player %d: ki full"), side + 1);
+                PortA11y_Say(text, 0);
+            }
+        }
+        if (up && !power[side]) {
+            if (m & BY_SOUND) {
+                PortA11y_Tone(TONE_KI, side, 7, 100); /* (the ki's notes a fifth higher) */
+            }
+            if (m & BY_VOICE) {
+                snprintf(text, sizeof(text), tr("Player %d: max power"), side + 1);
+                PortA11y_Say(text, 0);
+            }
+        }
+        bars[side] = now;
+        kiFull[side] = full;
+        power[side] = up;
+    }
+}
+
 /* Once per blank from a11y_game.c: `fight` while a fight is on with no menu over it. */
 void PortA11y_FightAlerts(int fight) {
     static int was;
@@ -321,8 +393,8 @@ void PortA11y_FightAlerts(int fight) {
         char note[160];
         was = 1;
         sBlank += 600; /* (whatever was waiting from the last fight is due) */
-        snprintf(note, sizeof(note), "fight alerts: distance %d, edge %d, health %d (0 off, 1 sound, 2 voice, 3 both)",
-                 mode(ALERT_DISTANCE), mode(ALERT_EDGE), mode(ALERT_HEALTH));
+        snprintf(note, sizeof(note), "fight alerts: distance %d, edge %d, health %d, moments %d, power %d (0 off, 1 sound, 2 voice, 3 both)",
+                 mode(ALERT_DISTANCE), mode(ALERT_EDGE), mode(ALERT_HEALTH), mode(ALERT_MOMENTS), mode(ALERT_POWER));
         PortA11y_Note(note);
     }
     sBlank++;
@@ -341,5 +413,8 @@ void PortA11y_FightAlerts(int fight) {
     }
     if (mode(ALERT_HEALTH)) {
         health(me);
+    }
+    if (mode(ALERT_MOMENTS)) {
+        moments();
     }
 }

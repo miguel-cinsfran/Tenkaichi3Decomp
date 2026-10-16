@@ -19,6 +19,7 @@ En el juego:
 - En el teclado: F2 repite el último mensaje. F3 y F4 dan el estado del jugador 1 y del jugador 2.
 - La ventana de ajustes se abre con F1, o con los dos botones del medio del control a la vez (Create y Options en un DualSense, Vista y Menú en un control de Xbox). En un deslizador, la palanca derecha baja o sube el valor.
 - Su pestaña Accesibilidad tiene los avisos de la pelea: distancia al rival, borde del escenario, vida, transformación y ataque definitivo, y estado a pedido, con sus volúmenes. Los de distancia, borde y vida vienen apagados: se encienden ahí.
+- En la pelea, el lector avisa solo los momentos importantes de los dos jugadores: cuando a uno le quedan 2 barras de vida y después 1, cuando el ki se llena y cuando entra en máximo poder. También dice los nombres de las técnicas que muestra el juego. Los dos se cambian en la pestaña Accesibilidad ("Momentos importantes" y "Nombres de las técnicas").
 - En el menú de pausa, la lista de técnicas se lee de a una técnica, con los botones de tu control.
 
 El lector de pantalla funciona con NVDA y con JAWS; sin ellos usa la voz de Windows. Habla gracias a Prism (licencia MPL-2.0; su código está en https://github.com/ethindp/prism; sus licencias, en licenses/prism). El idioma es el de Windows; para elegir otro, escribe a11y_lang="es" (o el código que quieras) en bt3_settings.txt.

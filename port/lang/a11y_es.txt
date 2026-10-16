@@ -1331,3 +1331,20 @@ b279f00490e62061	El instalador ya está abierto.
 69e8801a5e26e7a2	Las imágenes de disco que encontré no son del juego. Copia tu imagen de disco de Dragon Ball Z Budokai Tenkaichi 3, el archivo que termina en .iso, en la misma carpeta que este programa: la encuentro sola cuando termine de copiarse. Escape cierra.
 # Your disc image is %s. Enter installs it, Escape closes.
 a8930f02463dc899	Tu imagen de disco es %s. Enter la instala, Escape cierra.
+# The fight's important moments and the techniques' names (port/src/a11y_fight.c, gs/a11y_ui.cpp).
+# Player %d: 2 bars of health left
+be4cb5166f79096f	Jugador %d: le quedan 2 barras de vida
+# Player %d: 1 bar of health left
+4e853f8a89be53f3	Jugador %d: le queda 1 barra de vida
+# Player %d: ki full
+4a420cb7791713b0	Jugador %d: ki lleno
+# Player %d: max power
+d009c984512802a2	Jugador %d: en máximo poder
+# Important moments
+607372ebc722b6e4	Momentos importantes
+# Told by themselves, for both players: health down to two bars and then to one, the ki\nfull, max power. By the screen reader, by a sound (two beeps for health, three notes\ngoing up for the ki, higher for max power), or both.
+6cabf4123a01e30a	Se avisan solos, para los dos jugadores: la vida baja a dos barras y después a una, el ki lleno, el máximo poder. Por el lector de pantalla, con un sonido (dos pitidos para la vida, tres notas que suben para el ki, más agudas para el máximo poder), o las dos cosas.
+# Technique names
+f98af8ff54495839	Nombres de las técnicas
+# In a fight, the screen reader says the text the game shows: the names of the techniques.
+1886edeb564dc78a	En una pelea, el lector de pantalla dice el texto que muestra el juego: los nombres de las técnicas.

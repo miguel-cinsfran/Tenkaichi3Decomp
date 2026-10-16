@@ -9,6 +9,7 @@
  *   ring       two low knocks: out over the grass of the World Tournament ring, where landing loses
  *   health     two beeps, high then low, as the low-health alarm of the Pokémon games: the less health is left,
  *              the louder (a11y_fight.c gives the loudness)
+ *   ki         three quick notes going up (C6, E6, G6): the ki is full; a fifth higher, max power
  *
  * Made here from sine waves (nothing of the game's sounds), on a stream of their own for each kind (they can sound
  * together), at the cues' volume (a11y_cue_volume). Player 1's side is on the left and player 2's on the right, as
@@ -30,7 +31,7 @@ extern void PortA11y_Note(const char *text);
 #define TONE_EDGE (TONE_RATE * 3 / 1000)  /* fade in and out: no click */
 #define TONE_TAU 6.2831853f
 
-enum { TONE_DISTANCE, TONE_DISTANCE_CLOSE, TONE_EDGE_WALL, TONE_EDGE_TOP, TONE_EDGE_FLOOR, TONE_RING, TONE_HEALTH, TONE_KINDS };
+enum { TONE_DISTANCE, TONE_DISTANCE_CLOSE, TONE_EDGE_WALL, TONE_EDGE_TOP, TONE_EDGE_FLOOR, TONE_RING, TONE_HEALTH, TONE_KI, TONE_KINDS };
 
 static SDL_AudioStream *sStream[TONE_KINDS + 1]; /* (one per kind, and player 2's health beeps a second one) */
 static int sTried;
@@ -88,6 +89,12 @@ static int tone_wave(int kind, int pitch, float *out) {
         add_tone(out, 0, 90 * ms, 1318.5f, 0.45f, 0);
         add_tone(out, 130 * ms, 90 * ms, 1046.5f, 0.45f, 0);
         len = 220 * ms;
+        break;
+    case TONE_KI: /* C6, E6, G6 (moved by pitch), 60 ms each, touching */
+        add_tone(out, 0, 60 * ms, base * 1.18921f, 0.4f, 0);
+        add_tone(out, 60 * ms, 60 * ms, base * 1.49831f, 0.4f, 0);
+        add_tone(out, 120 * ms, 90 * ms, base * 1.78180f, 0.4f, 0);
+        len = 210 * ms;
         break;
     }
     return len;
