@@ -1348,3 +1348,61 @@ d009c984512802a2	Jugador %d: en máximo poder
 f98af8ff54495839	Nombres de las técnicas
 # In a fight, the screen reader says the text the game shows: the names of the techniques.
 1886edeb564dc78a	En una pelea, el lector de pantalla dice el texto que muestra el juego: los nombres de las técnicas.
+# Tick
+490384fb302b3764	Un tic
+# Distance to the rival: it repeats faster the nearer the rival is; higher when the rival is above you, lower when below.
+3f794d7fed8d210a	La distancia al rival: se repite más rápido cuanto más cerca está; más agudo si el rival está más arriba que tú, más grave si está más abajo.
+# Two ticks
+221d828fcc562323	Dos tics
+# The rival is within close range.
+85594236b2162760	El rival está a distancia de cuerpo a cuerpo.
+# Hum
+491d3119cd6ed171	Un zumbido
+# You are near the stage's wall; faster the nearer.
+796a13589fa7e719	Estás cerca de la pared del escenario; más rápido cuanto más cerca.
+# High hum
+1872b914ae14688f	Un zumbido agudo
+# You are under the stage's ceiling.
+0dfaa94af5b34ab2	Estás bajo el techo del escenario.
+# Two low knocks
+75e197aa2b3bd990	Dos golpes graves
+# You are out of the World Tournament ring.
+80a510ebc58240af	Estás fuera del ring del Torneo mundial.
+# Two beeps, high then low
+f445eef7c89416ed	Dos pitidos, agudo y grave
+# Health: louder the less is left. Player 1 on the left, player 2 on the right.
+5103149d076953a5	La vida: más fuertes cuanta menos queda. El jugador 1 a la izquierda, el jugador 2 a la derecha.
+# Three notes going up
+871eb3639b938365	Tres notas que suben
+# The ki is full.
+607809b5d197ba45	El ki está lleno.
+# Three higher notes going up
+20e1183f81cf551e	Tres notas más agudas que suben
+# Max power.
+f504efa4316eaa26	Máximo poder.
+# A tone that slides up
+7d24a029cca9e1ce	Un tono que sube
+# One more transformation can be taken.
+e6f7aa52140a669b	Se puede hacer una transformación más.
+# A small bell, twice
+5179508ce3b998cc	Una campanita, dos veces
+# The Ultimate Blast can be fired.
+3d3696d86e365256	Se puede tirar el ataque definitivo.
+# In the pause, Select plays the sound glossary, one sound at a time; twice quickly, the one before.
+910d7ffccdf2b0bf	En la pausa, Select reproduce el glosario de sonidos, de a un sonido; dos veces rápido, el anterior.
+#  and %d more
+9645b7c95a87678e	 y %d más
+# %s against %s. Stage: %s.
+491e575d4fc6b40e	%s contra %s. Escenario: %s.
+# Describe the fight
+fdf9652e931a068d	Describir la pelea
+# While a fight's opening plays, the screen reader says who fights whom, and where.
+46af2ed4ad2a3608	Mientras se ve la entrada de una pelea, el lector de pantalla dice quién pelea contra quién, y dónde.
+# Sound glossary
+1c14a93c48b34014	Glosario de sonidos
+# Close the sound glossary
+0a6c186cc46974b5	Cerrar el glosario de sonidos
+# Each of the accessibility's sounds, played, with what it means.
+f9a56caa6ccffd54	Cada sonido de la accesibilidad, con lo que significa.
+# Stage: %s.
+f929397be703affb	Escenario: %s.

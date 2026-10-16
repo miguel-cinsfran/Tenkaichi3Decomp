@@ -211,6 +211,7 @@ static char sLang[4] = "en";   /* its code: two or three small letters */
 static int sFrame; /* blanks since the start (only for the log) */
 static SDL_AtomicInt sAsk;   /* the gauges asked for and not said yet: 1 + the player's side, 0 none */
 static SDL_AtomicInt sFight; /* 1 while a fight is on with no menu over it (a11y_game.c says so every blank) */
+static SDL_AtomicInt sFightMenu; /* 1 while a fight's pause menu is open (a11y_game.c, PortA11y_FightMenu) */
 static float sTouchX = -1;   /* where a finger last touched the controller's touchpad, 0 left to 1 right (render
                                 thread only; -1: none yet) */
 static FILE *sLog;
@@ -774,9 +775,24 @@ void PortA11y_SelectTap(int player, int taps) {
     if (SDL_GetAtomicInt(&sFight)) {
         side = Port_NetActive() ? Port_NetMe() & 1 : player & 1;
         SDL_SetAtomicInt(&sAsk, 1 + (taps > 1 ? side ^ 1 : side));
+    } else if (SDL_GetAtomicInt(&sFightMenu)) {
+        extern void PortA11y_GlossaryStep(int step); /* a11y_glossary.c: the next sound and its meaning */
+        PortA11y_GlossaryStep(taps > 1 ? -2 : 1);       /* (two taps: the one before the first tap's) */
     } else {
         PortA11y_Repeat();
     }
+}
+
+/* For a11y_game.c, once per blank: `open` while a fight's pause menu is open. There a tap of Select goes through the
+   sound glossary (PortA11y_SelectTap); the first time the menu opens in a run, that is said after the menu. */
+void PortA11y_FightMenu(int open) {
+    static int told;
+
+    if (open && !SDL_GetAtomicInt(&sFightMenu) && !told) {
+        told = 1;
+        PortA11y_Say(PortA11y_TrSense(NULL, "In the pause, Select plays the sound glossary, one sound at a time; twice quickly, the one before."), 0);
+    }
+    SDL_SetAtomicInt(&sFightMenu, open);
 }
 
 /* gs_input.c, Port_PadRead: 1 while Select is the reader's and not the game's. In a fight the game reads Select only

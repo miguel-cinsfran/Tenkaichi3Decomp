@@ -100,15 +100,16 @@ extern A11yBound GAME_PTR gEftBound;
 enum { TONE_DISTANCE, TONE_DISTANCE_CLOSE, TONE_EDGE_WALL, TONE_EDGE_TOP, TONE_EDGE_FLOOR, TONE_RING, TONE_HEALTH, TONE_KI };
 
 /* The alerts and how each is told (a bit each: 1 a sound, 2 the screen reader). */
-enum { ALERT_DISTANCE, ALERT_EDGE, ALERT_HEALTH, ALERT_POWER, ALERT_GAUGES, ALERT_MOMENTS, ALERT_NAMES, ALERTS };
+enum { ALERT_DISTANCE, ALERT_EDGE, ALERT_HEALTH, ALERT_POWER, ALERT_GAUGES, ALERT_MOMENTS, ALERT_NAMES, ALERT_INTRO, ALERTS };
 #define BY_SOUND 1
 #define BY_VOICE 2
 /* (ALERT_MOMENTS: health down to two bars and to one, ki full, max power, told by themselves; ALERT_NAMES: the text
-   the game shows in a fight, the techniques' names, said by the reader (a11y_game.c, shown_text): 0 or BY_VOICE) */
+   the game shows in a fight, the techniques' names, said by the reader (a11y_game.c, shown_text); ALERT_INTRO: who
+   against whom and where, said while the fight's opening plays (a11y_game.c, fight_intro): both 0 or BY_VOICE) */
 static const char *const kKeys[ALERTS] = {"a11y_alert_distance", "a11y_alert_edge", "a11y_alert_health", "a11y_alert_power",
-                                          "a11y_gauges", "a11y_alert_moments", "a11y_technique_names"};
-static const int kDefaults[ALERTS] = {0, 0, 0, BY_SOUND, BY_SOUND, BY_VOICE, BY_VOICE};
-static int sMode[ALERTS] = {-1, -1, -1, -1, -1, -1, -1};
+                                          "a11y_gauges", "a11y_alert_moments", "a11y_technique_names", "a11y_fight_intro"};
+static const int kDefaults[ALERTS] = {0, 0, 0, BY_SOUND, BY_SOUND, BY_VOICE, BY_VOICE, BY_VOICE};
+static int sMode[ALERTS] = {-1, -1, -1, -1, -1, -1, -1, -1};
 
 static int mode(int alert) {
     if (sMode[alert] < 0) {
@@ -126,6 +127,11 @@ int PortA11y_AlertMode(int alert) {
 /* a11y_game.c, shown_text: 1 when the text the game shows in a fight (the techniques' names) is said. */
 int PortA11y_TechniqueNames(void) {
     return mode(ALERT_NAMES) != 0;
+}
+
+/* a11y_game.c, fight_intro: 1 when the fight is described while its opening plays. */
+int PortA11y_IntroDescription(void) {
+    return mode(ALERT_INTRO) != 0;
 }
 
 void PortA11y_SetAlertMode(int alert, int value) {

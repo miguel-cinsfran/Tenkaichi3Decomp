@@ -3465,6 +3465,9 @@ extern int PortA11y_GaugesAsked(int fight); /* gs/a11y.c */
 extern int PortA11y_GaugesQuery(int side);  /* a11y_fight.c: the beeps; 2 set when the gauges are said too */
 extern void PortA11y_PowerCue(int side, int kind, int count); /* a11y_fight.c: the cue as a sound, the voice or both */
 extern void PortA11y_FightAlerts(int fight); /* a11y_fight.c: distance, the stage's edge, health */
+extern void PortA11y_FightMenu(int open);    /* gs/a11y.c: a fight's pause menu is open */
+extern int PortA11y_IntroDescription(void);  /* a11y_fight.c: the Accessibility tab's "Describe the fight" */
+extern int Battle_GetStage(void);            /* src/battle/battle_load.c (only reads) */
 
 #define GAUGE_HP_BAR 10000  /* docs/systems/hud.md: health per bar */
 #define GAUGE_KI_BAR 20000  /* ki per bar, five bars */
@@ -3609,6 +3612,40 @@ static void fight_cues(void) {
     }
 }
 
+/* A short description of the fight while its opening plays, before the fighting starts: who against whom (the
+   names the selects gave: sNameCache; a team's size when it has more than one) and where. Once per battle, queued
+   after what is being said. The player asked for it: the opening has no words of its own for who is on screen. */
+static void fight_intro(void) {
+    static int said;
+    char text[A11Y_TEXT], who[2][160];
+    int side, team;
+
+    if (!in_battle() || gBtlChars == NULL) {
+        said = 0;
+        return;
+    }
+    if (said || fighting() || BtlChar_FindBySide(0) == NULL || BtlChar_FindBySide(1) == NULL || !PortA11y_IntroDescription()) {
+        return;
+    }
+    said = 1;
+    for (side = 0; side < 2; side++) {
+        int chara = BtlCharApi_GetChara(side);
+        if (chara < 0 || chara >= MCHR_RANDOM || sNameCache[chara][0] == '\0') { /* (no select has named it: only where) */
+            snprintf(text, sizeof(text), tr("Stage: %s."), stage_name(Battle_GetStage()));
+            PortA11y_Say(text, 0);
+            return;
+        }
+        cached_name(who[side], sizeof(who[side]), chara);
+        if ((team = BtlSide_CountAlive(side)) > 1) {
+            size_t len = strlen(who[side]);
+            snprintf(who[side] + len, sizeof(who[side]) - len, tr(" and %d more"), team - 1);
+        }
+    }
+    snprintf(text, sizeof(text), tr("%s against %s. Stage: %s."), who[0], who[1], stage_name(Battle_GetStage()));
+    PortA11y_Say(text, 0);
+    PortA11y_Note("fight: the opening described");
+}
+
 /* Once per blank (plat_stub.c: Port_VBlank). */
 void PortA11y_GameTick(void) {
     int v;
@@ -3657,4 +3694,6 @@ void PortA11y_GameTick(void) {
     fight_cues();
     /* (BATTLE_FLAG_PAUSE: the fight frozen; online a pause menu does not freeze it, and the rival's is not this player's) */
     PortA11y_FightAlerts(fighting() && btl_menu_shown() == NULL && !(gBattleWork.flags & BATTLE_FLAG_PAUSE));
+    PortA11y_FightMenu(fighting() && btl_menu_shown() != NULL); /* (a11y.c: Select goes through the sound glossary) */
+    fight_intro();
 }

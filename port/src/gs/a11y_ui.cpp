@@ -1595,35 +1595,64 @@ int A11yUi_Tabs(void) {
     return PortA11y_On() ? 1 : 0;
 }
 
+// The tab's own texts are drawn in the language the screen reader speaks (port/lang/a11y_<code>.txt), so that what is on
+// screen and what is said agree; the reader then says them as they are. "<line>##<English>" keeps each control's id.
+namespace {
+const char *shown(const char *en) {
+    return lang_line(en);
+}
+
+const char *label_id(const char *en) {
+    static char buf[8][512];
+    static int k;
+    k = (k + 1) % 8;
+    snprintf(buf[k], sizeof(buf[k]), "%s##%s", lang_line(en), en);
+    return buf[k];
+}
+
+void tab_tip(const char *en) {
+    if (ImGui::BeginItemTooltip()) {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 32.0f);
+        ImGui::TextUnformatted(lang_line(en));
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+bool tab_slider(const char *en, int *v, int lo, int hi, const char *format) {
+    bool changed = ImGui::SliderInt(label_id(en), v, lo, hi, format, ImGuiSliderFlags_AlwaysClamp);
+    if (ImGui::IsItemDeactivatedAfterEdit()) {
+        Port_SettingsWrite();
+    }
+    return changed;
+}
+} // namespace
+
+extern "C" int PortA11y_GlossaryCount(void);           // a11y_glossary.c
+extern "C" const char *PortA11y_GlossaryName(int i);
+extern "C" void PortA11y_GlossaryPlay(int i, int numbered);
+
 void A11yUi_Tab(void) {
+    static bool glossary;
     int v;
 
-    ImGui::TextWrapped("Sounds and voices of the accessibility. The screen reader keeps its own volume: see the last button.");
+    ImGui::TextWrapped("%s", shown("Sounds and voices of the accessibility. The screen reader keeps its own volume: see the last button."));
     ImGui::Spacing();
     v = PortA11y_CueVolume();
-    if (ImGui::SliderInt("Cue sounds", &v, 0, 100, "%d%%", ImGuiSliderFlags_AlwaysClamp)) {
+    if (tab_slider("Cue sounds", &v, 0, 100, "%d%%")) {
         PortA11y_SetCueVolume(v);
     }
-    if (ImGui::IsItemDeactivatedAfterEdit()) {
-        Port_SettingsWrite();
-    }
-    ImGui::SetItemTooltip("The accessibility's sounds in a fight: the alerts below that are told by a sound. 0 turns them off.");
+    tab_tip("The accessibility's sounds in a fight: the alerts below that are told by a sound. 0 turns them off.");
     v = PortA11y_Voices(0);
-    if (ImGui::SliderInt("Game voices in menus", &v, 0, 100, "%d%%", ImGuiSliderFlags_AlwaysClamp)) {
+    if (tab_slider("Game voices in menus", &v, 0, 100, "%d%%")) {
         PortA11y_SetVoices(0, v);
     }
-    if (ImGui::IsItemDeactivatedAfterEdit()) {
-        Port_SettingsWrite();
-    }
-    ImGui::SetItemTooltip("The game's spoken lines outside a fight, under the screen reader.");
+    tab_tip("The game's spoken lines outside a fight, under the screen reader.");
     v = PortA11y_Voices(1);
-    if (ImGui::SliderInt("Game voices in fights", &v, 0, 100, "%d%%", ImGuiSliderFlags_AlwaysClamp)) {
+    if (tab_slider("Game voices in fights", &v, 0, 100, "%d%%")) {
         PortA11y_SetVoices(1, v);
     }
-    if (ImGui::IsItemDeactivatedAfterEdit()) {
-        Port_SettingsWrite();
-    }
-    ImGui::SetItemTooltip("The fighters' voices during a fight, under the screen reader.");
+    tab_tip("The fighters' voices during a fight, under the screen reader.");
     ImGui::Spacing();
     // The fight's alerts (a11y_fight.c), each a slider over its ways of telling, so that the right stick changes it
     // as it does the volumes; the gauges asked for have no "Off" (they are only told when asked).
@@ -1648,28 +1677,47 @@ void A11yUi_Tab(void) {
     for (int i = 0; i < (int)(sizeof(kAlerts) / sizeof(kAlerts[0])); i++) {
         int lo = i == 4 ? 1 : 0;
         v = PortA11y_AlertMode(i);
-        if (ImGui::SliderInt(kAlerts[i].label, &v, lo, 3, kWays[v < lo ? lo : v > 3 ? 3 : v], ImGuiSliderFlags_AlwaysClamp)) {
+        if (tab_slider(kAlerts[i].label, &v, lo, 3, shown(kWays[v < lo ? lo : v > 3 ? 3 : v]))) {
             PortA11y_SetAlertMode(i, v);
         }
-        if (ImGui::IsItemDeactivatedAfterEdit()) {
+        tab_tip(kAlerts[i].tip);
+    }
+    // (a11y_fight.c ALERT_NAMES and ALERT_INTRO: off, or by the screen reader)
+    static const struct { int alert; const char *label, *tip; } kSaid[] = {
+        {6, "Technique names", "In a fight, the screen reader says the text the game shows: the names of the techniques."},
+        {7, "Describe the fight", "While a fight's opening plays, the screen reader says who fights whom, and where."},
+    };
+    for (const auto &c : kSaid) {
+        bool on = PortA11y_AlertMode(c.alert) != 0;
+        if (ImGui::Checkbox(label_id(c.label), &on)) {
+            PortA11y_SetAlertMode(c.alert, on ? 2 : 0);
             Port_SettingsWrite();
         }
-        ImGui::SetItemTooltip("%s", kAlerts[i].tip);
+        tab_tip(c.tip);
     }
-    bool names = PortA11y_AlertMode(6) != 0; // (a11y_fight.c ALERT_NAMES: off, or by the screen reader)
-    if (ImGui::Checkbox("Technique names", &names)) {
-        PortA11y_SetAlertMode(6, names ? 2 : 0);
-        Port_SettingsWrite();
+    ImGui::Spacing();
+    // The sounds and what they mean: a button opens the list, a button for each plays it and says its meaning.
+    char open[256];
+    snprintf(open, sizeof(open), "%s##glossary", shown(glossary ? "Close the sound glossary" : "Sound glossary"));
+    if (ImGui::Button(open)) { // (one id for both of its names: the focus stays on it)
+        glossary = !glossary;
     }
-    ImGui::SetItemTooltip("In a fight, the screen reader says the text the game shows: the names of the techniques.");
+    tab_tip("Each of the accessibility's sounds, played, with what it means.");
+    if (glossary) {
+        ImGui::Indent();
+        for (int i = 0; i < PortA11y_GlossaryCount(); i++) {
+            if (ImGui::Button(label_id(PortA11y_GlossaryName(i)))) {
+                PortA11y_GlossaryPlay(i, 0);
+            }
+        }
+        ImGui::Unindent();
+    }
     ImGui::Spacing();
     // (A button, not a line of text: a line after the last item would be said with the next one, Exit game)
     static const char kReader[] = "The screen reader's volume is set in the screen reader itself. With NVDA: NVDA+Control+left "
                                   "or right arrow until Volume, then NVDA+Control+up or down arrow.";
-    if (ImGui::Button("Screen reader volume")) {
-        char t[512];
-        tr(kReader, t, sizeof(t));
-        PortA11y_Say(t, A11Y_INTERRUPT);
+    if (ImGui::Button(label_id("Screen reader volume"))) {
+        PortA11y_Say(shown(kReader), A11Y_INTERRUPT);
     }
-    ImGui::SetItemTooltip("%s", kReader);
+    tab_tip(kReader);
 }
