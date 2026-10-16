@@ -102,7 +102,7 @@ ImGuiID sPendId; // an ItemInfo before its ItemAdd (a tab)
 ImGuiItemStatusFlags sPendStatus;
 char sPendLabel[96];
 bool sTipOpen; // a tooltip's window began, and nothing after it yet: g.TempBuffer may hold its text
-char sTipTemp[256];
+char sTipTemp[2048];
 
 char sLog[1 << 16];
 int sLogLen;
@@ -137,6 +137,10 @@ ImGuiID sTrailing[16]; // roots whose last lines were said (once a run)
 int sTrailingCount;
 bool sSliderHint;
 ImGuiID sTipId; // the item whose tooltip was said
+// The whole tooltip of the focused item, when the code that draws it gives it (the Accessibility tab: tab_tip): said in
+// place of the lines read from the tooltip's window, which can be fewer than it has.
+ImGuiID sFullTipId;
+char sFullTip[1024];
 bool sComboWait; // back on a combo box from its list: a frame waited for it to show the choice
 char sNotice[512];
 struct Bar {
@@ -1398,6 +1402,11 @@ void speak(ImGuiContext &g) {
         if (sp == NULL) {
             continue;
         }
+        // (a tooltip in the frames it appears in is still being measured: what is drawn of it is clipped to the size
+        // it had, and the lines after the first ones were missing; it is read once it is whole)
+        if (sp == &tip && (it.window->Appearing || it.window->HiddenFramesCannotSkipItems > 0 || it.window->HiddenFramesCanSkipItems > 0)) {
+            continue;
+        }
         char all[2048];
         int n = 0;
         all[0] = '\0';
@@ -1406,6 +1415,13 @@ void speak(ImGuiContext &g) {
                 n += snprintf(all + n, sizeof(all) - n > 0 ? sizeof(all) - n : 0, "%s%s", n ? "\n" : "", sText + sPiece[i].text);
                 n = n < (int)sizeof(all) ? n : (int)sizeof(all) - 1;
             }
+        }
+        // A tooltip's lines that were not drawn (clipped by the window's edge or the screen's) are not in the log, and
+        // text drawn right under it can be taken for more of it: its whole text, when the window formatted it
+        // (g.TempBuffer: SetItemTooltip with a format), is the one that starts with the same line.
+        size_t first = strcspn(sTipTemp, "\n");
+        if (sp == &tip && first > 0 && strncmp(all, sTipTemp, first) == 0 && (all[first] == '\0' || all[first] == '\n')) {
+            snprintf(all, sizeof(all), "%s", sTipTemp);
         }
         char t[2048];
         if (tr(all, t, sizeof(t)) || strchr(all, '\n') == NULL) {
@@ -1417,6 +1433,10 @@ void speak(ImGuiContext &g) {
                 }
             }
         }
+    }
+    if (tip.n > 0 && sFullTipId == g.NavId && sFullTip[0] != '\0') {
+        tip = {};
+        add(tip, sFullTip, ". ");
     }
     if (tip.n > 0 && f >= 0 && !sComboWait && g.NavCursorVisible && sTipId != g.NavId) {
         sTipId = g.NavId;
@@ -1502,6 +1522,7 @@ void frame_begin(ImGuiContext *ctx, ImGuiContextHook *) {
     sPushed = 0;
     sTipOpen = false;
     sTipTemp[0] = '\0';
+    sFullTipId = 0;
     stick(g);
     ImGui::LogToBuffer(0);
     g.LogWindow = NULL; // (End() of the window that began the log would end it)
@@ -1611,6 +1632,10 @@ const char *label_id(const char *en) {
 }
 
 void tab_tip(const char *en) {
+    if (ImGui::IsItemFocused()) { // (the whole text, for the reader: speak)
+        sFullTipId = ImGui::GetItemID();
+        snprintf(sFullTip, sizeof(sFullTip), "%s", lang_line(en));
+    }
     if (ImGui::BeginItemTooltip()) {
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 32.0f);
         ImGui::TextUnformatted(lang_line(en));
