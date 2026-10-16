@@ -18,13 +18,13 @@
  * one, Minus on a Nintendo one): every controller has it in the same place. A tap of it, pressed and let go within half
  * a second with no other button of that controller pressed in between (Start with it opens the settings window) and
  * the settings window closed, asks for the gauges in a fight and a second tap within 0.4 s for the rival's; outside a
- * fight it says the last message again (a11y.c, PortA11y_SelectTap). The game still gets the button, as it would
- * without this, and reads it in a fight for one thing only: each press steps the fighter's camera to the next of its
- * three distances (src/battle/btl_char_cam_modes.c, ChrCam_UpdateInput, the literal 0x800000 = BTLB_SELECT). Nothing
- * of that is seen by a player who cannot see the screen, but the fighters' sounds are as loud as they are near the
- * camera (src/battle/btl_char_flag_snd.c, BtlCharSnd_CalcVolPan), so a farther camera makes them a little softer.
- * The player chose this button knowing it. (The left stick's click was tried before, but players use it in fights,
- * for the transformations.)
+ * fight it says the last message again (a11y.c, PortA11y_SelectTap). In a fight the game reads Select for one thing
+ * only, to step the fighter's camera to the next of its three distances (src/battle/btl_char_cam_modes.c,
+ * ChrCam_UpdateInput, the literal 0x800000 = BTLB_SELECT), and the fighters' sounds are as loud as they are near the
+ * camera (btl_char_flag_snd.c, BtlCharSnd_CalcVolPan): each tap made the fight louder or softer at once. So while the
+ * reader is on, in a fight, the game does not get Select (gs_input.c asks PortA11y_TakesSelect), as the player who
+ * asked for this wanted. (The left stick's click was tried before, but players use it in fights, for the
+ * transformations.)
  */
 #include <SDL3/SDL.h>
 #include <stdio.h>

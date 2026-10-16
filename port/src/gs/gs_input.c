@@ -972,6 +972,12 @@ int Port_PadRead(int socket, unsigned char *data) {
             fprintf(stderr, "sticks: the game's pad 1 has left %+.4f %+.4f, right %+.4f %+.4f, held %08X\n", f[0], f[1], f[2], f[3], held);
         }
     }
+    {
+        extern int PortA11y_TakesSelect(void); /* a11y.c: with the screen reader on, Select in a fight is its own */
+        if (PortA11y_TakesSelect()) {
+            btn &= ~(unsigned)B_SELECT;
+        }
+    }
     clash_square(socket, &btn, &lx, &ly);
     memset(data, 0, 18);
     data[0] = (unsigned char)(~btn & 0xFF);       /* active low */

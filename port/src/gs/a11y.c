@@ -779,6 +779,17 @@ void PortA11y_SelectTap(int player, int taps) {
     }
 }
 
+/* gs_input.c, Port_PadRead: 1 while Select is the reader's and not the game's. In a fight the game reads Select only
+   to step the fighter's camera to its next distance (src/battle/btl_char_cam_modes.c, ChrCam_UpdateInput), and the
+   fighters' sounds are as loud as they are near the camera (btl_char_flag_snd.c, BtlCharSnd_CalcVolPan): each tap
+   for the gauges made the fight louder or softer at once. So with the reader on, in a fight with no menu over it,
+   the game does not get Select (from any controller or key: the camera stays where it is); everywhere else it does.
+   Asked by the player who plays with the reader. Only what the controllers give is changed, before the game or the
+   online match sees it, so both copies of an online match get the same. */
+int PortA11y_TakesSelect(void) {
+    return sOn && SDL_GetAtomicInt(&sFight);
+}
+
 /* For a11y_game.c, once per blank: whether a fight is on with no menu over it (the touchpad click asks for the gauges
    then), and the gauges asked for since the last call (1 + the player's side, 0 none). */
 int PortA11y_GaugesAsked(int fight) {

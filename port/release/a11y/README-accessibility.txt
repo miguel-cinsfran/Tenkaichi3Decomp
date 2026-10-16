@@ -14,7 +14,7 @@ If Windows says "Windows protected your PC", choose "More info" and then "Run an
 You need your own disc image of the USA release (SLUS-21678), with the game's programs unmodified. Do not share or ask for disc images.
 
 In the game:
-- The controller's Select (Create on a DualSense, View on an Xbox controller), alone: in a fight it gives your health; twice quickly, the rival's. Outside a fight it says the last message again. In a fight the game also uses Select to move the camera farther or nearer, which can change the loudness of the hits a little.
+- The controller's Select (Create on a DualSense, View on an Xbox controller), alone: in a fight it gives your health; twice quickly, the rival's. When two people play, each hears their own first, on their own controller. Outside a fight it says the last message again. With the reader on, Select no longer moves the camera in a fight.
 - At first the health is two beeps, louder the less health is left. For the screen reader to say health, ki and blast: settings window, Accessibility tab, "Gauges on request", and choose "Screen reader" or "Sound and screen reader".
 - On the keyboard: F2 says the last message again. F3 and F4 give player 1's and player 2's gauges.
 - The settings window opens with F1, or with the controller's two middle buttons together (Create and Options on a DualSense, View and Menu on an Xbox controller). The right stick changes the focused value.
