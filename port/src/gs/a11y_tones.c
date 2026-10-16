@@ -17,11 +17,13 @@
 #include <SDL3/SDL.h>
 #include <math.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 extern SDL_AudioDeviceID Port_AudioDevice(void); /* snd_adx.c */
 extern int PortA11y_CueVolume(void);              /* a11y.c */
 extern int PortA11y_On(void);
+extern void PortA11y_Note(const char *text);
 
 #define TONE_RATE 48000
 #define TONE_MAX (TONE_RATE * 300 / 1000) /* the longest tone */
@@ -106,7 +108,12 @@ void PortA11y_Tone(int kind, int side, int pitch, int loud) {
         return;
     }
     if (!sTried) {
+        static int noted;
+        char note[160];
         if ((dev = Port_AudioDevice()) == 0) {
+            if (!noted++) {
+                PortA11y_Note("tones: no sound device yet");
+            }
             return; /* (no sound device, or none yet) */
         }
         sTried = 1;
@@ -119,12 +126,25 @@ void PortA11y_Tone(int kind, int side, int pitch, int loud) {
                 sStream[k] = NULL;
             }
         }
+        snprintf(note, sizeof(note), "tones: on sound device %u, %s", (unsigned)dev, sStream[0] != NULL ? "ready" : SDL_GetError());
+        PortA11y_Note(note);
     }
     k = kind == TONE_HEALTH && side == 1 ? TONE_KINDS : kind;
     if (sStream[k] == NULL) {
         return;
     }
-    gain = 0.25f * (float)PortA11y_CueVolume() / 100.0f * (float)(loud > 100 ? 100 : loud) / 100.0f;
+    {
+        static int played; /* (the first of each kind goes to the log: that the fight asked for it and it was played) */
+        if (!(played & (1 << k))) {
+            char note[96];
+            played |= 1 << k;
+            snprintf(note, sizeof(note), "tones: first of kind %d played (side %d, loud %d, cues at %d%%)", kind, side, loud,
+                     PortA11y_CueVolume());
+            PortA11y_Note(note);
+        }
+    }
+    /* (a tick at the cues' default 60 % peaks near -10 dB of the full scale: the game's music is loud) */
+    gain = 0.6f * (float)PortA11y_CueVolume() / 100.0f * (float)(loud > 100 ? 100 : loud) / 100.0f;
     l = side == 1 ? 0.35f : 1.0f; /* (the other side at a third, as a11y.c's cues have it) */
     r = side == 0 ? 0.35f : 1.0f;
     len = tone_wave(kind, pitch < -24 ? -24 : pitch > 24 ? 24 : pitch, wave);

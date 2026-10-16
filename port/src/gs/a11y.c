@@ -858,7 +858,7 @@ static int cue_wave(int kind, float *out) {
    2, the other side at a fifth; into out (CUE_MAX frames). Returns the frames. */
 static int cue_pcm(int side, int kind, int16_t *out) {
     static float wave[CUE_MAX];
-    float loud = 0.25f * (float)sCueVolume / 100.0f, soft = loud * 0.2f;
+    float loud = 0.6f * (float)sCueVolume / 100.0f, soft = loud * 0.2f; /* (as loud as the fight's tones: a11y_tones.c) */
     int len = cue_wave(kind, wave), i;
 
     for (i = 0; i < len; i++) {

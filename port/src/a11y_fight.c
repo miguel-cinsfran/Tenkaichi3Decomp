@@ -129,10 +129,10 @@ void PortA11y_SetAlertMode(int alert, int value) {
 
 static int sBlank; /* blanks of fights told so far */
 
-/* How loud the health beeps are for a side: from a third at full health to all at none. */
+/* How loud the health beeps are for a side: from a half at full health to all at none. */
 static int health_loud(int hp, int max) {
     int pct = max > 0 ? hp * 100 / max : 100;
-    return 35 + 65 * (100 - (pct < 0 ? 0 : pct > 100 ? 100 : pct)) / 100;
+    return 50 + 50 * (100 - (pct < 0 ? 0 : pct > 100 ? 100 : pct)) / 100;
 }
 
 /* The gauges asked for (a11y_game.c, fight_gauges): the beeps when they go by sound; returns how they are told, so
@@ -147,6 +147,12 @@ int PortA11y_GaugesQuery(int side) {
 
     if (m & BY_SOUND) {
         PortA11y_Tone(TONE_HEALTH, side, 0, health_loud(BtlCharApi_GetHp(side), BtlCharApi_GetHpMax(side)));
+    }
+    {
+        char note[96];
+        snprintf(note, sizeof(note), "gauges asked: player %d, told by %s", side + 1,
+                 m == BY_SOUND ? "sound" : m == BY_VOICE ? "voice" : "sound and voice");
+        PortA11y_Note(note);
     }
     return m;
 }
@@ -312,8 +318,12 @@ void PortA11y_FightAlerts(int fight) {
         return;
     }
     if (!was) {
+        char note[160];
         was = 1;
         sBlank += 600; /* (whatever was waiting from the last fight is due) */
+        snprintf(note, sizeof(note), "fight alerts: distance %d, edge %d, health %d (0 off, 1 sound, 2 voice, 3 both)",
+                 mode(ALERT_DISTANCE), mode(ALERT_EDGE), mode(ALERT_HEALTH));
+        PortA11y_Note(note);
     }
     sBlank++;
     me = Port_NetActive() ? Port_NetMe() & 1 : 0;
