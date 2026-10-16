@@ -11,10 +11,10 @@
  * before. "Repeat" says again the last interrupting message and the ones queued after it.
  *
  *   bt3_settings.txt  a11y=0            off, even with the library there
- *                     a11y_key_repeat   the repeat key, an SDL scancode (default F2); a click of the controller's
- *                                       left stick (a11y_pad.c) and its touchpad repeat too, except in a fight
+ *                     a11y_key_repeat   the repeat key, an SDL scancode (default F2); the controller's Select
+ *                                       tapped alone (a11y_pad.c) and its touchpad repeat too, except in a fight
  *                     a11y_key_gauges1  the keys that say player 1's and player 2's gauges in a fight (default F3
- *                     a11y_key_gauges2  and F4); in a fight the left stick's click says the player's own (twice: the
+ *                     a11y_key_gauges2  and F4); in a fight a tap of Select says the player's own (twice: the
  *                                       rival's), the touchpad click those of the half it is clicked on
  *                     a11y_log=1        the log below, into a11y_log.txt in the program's folder (for a report)
  *                     a11y_cue_volume   the fight's cues (a11y_game.c: a transformation or the Ultimate Blast within
@@ -761,10 +761,10 @@ void PortA11y_Event(const SDL_Event *ev) {
     }
 }
 
-/* The left stick's click tapped alone (a11y_pad.c, the render thread), by a player (0 or 1), `taps` in a row: in a
+/* The Select button tapped alone (a11y_pad.c, the render thread), by a player (0 or 1), `taps` in a row: in a
    fight the gauges of the player's own side (online, the side this copy plays), and from the second tap the rival's;
    elsewhere what was said last, again. The same for every controller, which the touchpad is not. */
-void PortA11y_StickTap(int player, int taps) {
+void PortA11y_SelectTap(int player, int taps) {
     extern int Port_NetActive(void), Port_NetMe(void); /* net.c */
     int side;
 

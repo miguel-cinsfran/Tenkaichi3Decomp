@@ -14,13 +14,17 @@
  * Called from the game's thread (a11y_text.c, a11y_skills.c) and the render thread (a11y_ui.cpp); everything here
  * only asks SDL and the bindings, and the last controller used is one atomic value.
  *
- * Here too the left stick's click (L3 on a PlayStation controller, LS on an Xbox one): every controller has it, and in a
- * fight the game reads it only together with R3 (src/battle/btl_input.c, BtlInput_BuildMaskTable: L3 is only in the
- * mask of BTLB_L3R3, which needs both down); its menus read neither PADG_L3 nor the raw PAD_L3. (Select is not free:
- * in a fight it steps the camera's distance, btl_char_cam_modes.c ChrCam_UpdateInput.) A tap of it, pressed and let
- * go within half a second with no other button of that controller pressed in between and the settings window closed,
- * asks for the gauges in a fight and a second tap within 0.4 s for the rival's; outside a fight it says the last
- * message again (a11y.c, PortA11y_StickTap). The game still gets the button, as it would without this.
+ * Here too the Select button (Create on a DualSense, Share on a DualShock 4, View on an Xbox controller, Back on a 360
+ * one, Minus on a Nintendo one): every controller has it in the same place. A tap of it, pressed and let go within half
+ * a second with no other button of that controller pressed in between (Start with it opens the settings window) and
+ * the settings window closed, asks for the gauges in a fight and a second tap within 0.4 s for the rival's; outside a
+ * fight it says the last message again (a11y.c, PortA11y_SelectTap). The game still gets the button, as it would
+ * without this, and reads it in a fight for one thing only: each press steps the fighter's camera to the next of its
+ * three distances (src/battle/btl_char_cam_modes.c, ChrCam_UpdateInput, the literal 0x800000 = BTLB_SELECT). Nothing
+ * of that is seen by a player who cannot see the screen, but the fighters' sounds are as loud as they are near the
+ * camera (src/battle/btl_char_flag_snd.c, BtlCharSnd_CalcVolPan), so a farther camera makes them a little softer.
+ * The player chose this button knowing it. (The left stick's click was tried before, but players use it in fights,
+ * for the transformations.)
  */
 #include <SDL3/SDL.h>
 #include <stdio.h>
@@ -34,7 +38,7 @@ extern void PortA11y_Note(const char *text);
 enum { FAMILY_NONE, FAMILY_PS3, FAMILY_PS4, FAMILY_PS5, FAMILY_XBOX360, FAMILY_XBOX, FAMILY_NINTENDO, FAMILY_GAMECUBE };
 
 static SDL_AtomicInt sLastPad; /* the SDL id of the controller a button was last pressed on, 0 = none yet */
-extern void PortA11y_StickTap(int player, int taps); /* a11y.c */
+extern void PortA11y_SelectTap(int player, int taps); /* a11y.c */
 
 /* The player (0 or 1) whose controller this is in the Controls tab, -1 none. */
 static int player_of(SDL_JoystickID id) {
@@ -52,7 +56,7 @@ static int player_of(SDL_JoystickID id) {
 }
 
 /* The render thread's events (a11y.c, PortA11y_Event): a button pressed tells which controller is in use, and the
-   left stick's click alone is a tap (see the top). Each controller's click is followed on its own. */
+   Select button alone is a tap (see the top). Each controller's Select is followed on its own. */
 void PortA11y_PadUsed(const SDL_Event *ev) {
     static struct {
         SDL_JoystickID id; /* 0: free */
@@ -79,27 +83,27 @@ void PortA11y_PadUsed(const SDL_Event *ev) {
     }
     if (ev->type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
         SDL_SetAtomicInt(&sLastPad, (int)id);
-        if (ev->gbutton.button == SDL_GAMEPAD_BUTTON_LEFT_STICK) {
+        if (ev->gbutton.button == SDL_GAMEPAD_BUTTON_BACK) {
             for (i = 0; slot < 0 && i < 4; i++) {
                 slot = held[i].id == 0 ? i : slot;
             }
             if (slot >= 0) {
                 SDL_Gamepad *g = SDL_GetGamepadFromID(id);
                 held[slot].id = id;
-                held[slot].alone = !gPortOverlayOpen && !(g != NULL && SDL_GetGamepadButton(g, SDL_GAMEPAD_BUTTON_RIGHT_STICK));
+                held[slot].alone = !gPortOverlayOpen && !(g != NULL && SDL_GetGamepadButton(g, SDL_GAMEPAD_BUTTON_START));
                 held[slot].down = now;
             }
         } else if (slot >= 0) {
-            held[slot].alone = 0; /* (another button with it: not a tap; R3 with it is the game's L3 + R3) */
+            held[slot].alone = 0; /* (another button with it: not a tap; Start with it is the settings window) */
         }
-    } else if (ev->gbutton.button == SDL_GAMEPAD_BUTTON_LEFT_STICK && slot >= 0) {
+    } else if (ev->gbutton.button == SDL_GAMEPAD_BUTTON_BACK && slot >= 0) {
         held[slot].id = 0;
         player = player_of(id); /* (-1: not a player's controller, or no longer there) */
         if (held[slot].alone && now - held[slot].down < 500 && !gPortOverlayOpen && player >= 0) {
             taps = now - lastTap < 400 && player == tapPlayer ? taps + 1 : 1;
             lastTap = now;
             tapPlayer = player;
-            PortA11y_StickTap(player, taps);
+            PortA11y_SelectTap(player, taps);
         }
     }
 }

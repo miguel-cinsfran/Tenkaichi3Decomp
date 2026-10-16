@@ -1637,10 +1637,10 @@ void A11yUi_Tab(void) {
         {"Health", "Two beeps when a player's health falls under three quarters, a half and a quarter, louder the\n"
                    "less is left; under a quarter, yours again every three seconds. Player 1 left, player 2 right."},
         {"Transformation and Ultimate Blast", "When one more transformation or the Ultimate Blast comes within reach."},
-        {"Gauges on request", "A click of the left stick in a fight (L3 on a DualSense, LS on an Xbox controller): your\n"
-                              "gauges; two clicks quickly: the rival's. F3 and F4 on the keyboard: player 1's and player 2's.\n"
+        {"Gauges on request", "Select alone in a fight (Create on a DualSense, View on an Xbox controller): your gauges;\n"
+                              "Select twice quickly: the rival's. F3 and F4 on the keyboard: player 1's and player 2's.\n"
                               "Two beeps, louder the less health is left, or health, ki and blast said by the screen\n"
-                              "reader, or both. Outside a fight, the click says the last message again."},
+                              "reader, or both. Outside a fight, Select says the last message again."},
     };
     for (int i = 0; i < (int)(sizeof(kAlerts) / sizeof(kAlerts[0])); i++) {
         int lo = i == 4 ? 1 : 0;
