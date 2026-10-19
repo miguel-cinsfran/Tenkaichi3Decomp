@@ -24,4 +24,6 @@ In the game:
 - While a fight's opening plays, the reader says who fights whom and on which stage ("Describe the fight", in the Accessibility tab).
 - In the pause menu, the skill list is read one move at a time, with the buttons of your controller.
 
+If the controller does things you did not press (a button pauses, or opens the question to close the game) and Steam is open: Steam turns an Xbox controller's buttons into keys (A into Enter, B into Escape, by its "desktop layout") and the game gets both. To avoid it, close Steam while you play, or in Steam: Settings, Controller, Desktop Layout, Edit, and "Disable Steam Input".
+
 The screen reader works with NVDA and JAWS; without them it uses Windows' own voice. It speaks through Prism (MPL-2.0; its source is at https://github.com/ethindp/prism; its licences are in licenses/prism). The language is Windows' language; for another one, write a11y_lang="en" (or the code you want) in bt3_settings.txt.

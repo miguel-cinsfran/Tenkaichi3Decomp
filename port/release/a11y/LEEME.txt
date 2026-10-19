@@ -24,4 +24,6 @@ En el juego:
 - Mientras se ve la entrada de una pelea, el lector dice quién pelea contra quién y en qué escenario ("Describir la pelea", en la pestaña Accesibilidad).
 - En el menú de pausa, la lista de técnicas se lee de a una técnica, con los botones de tu control.
 
+Si el control hace cosas que no apretaste (un botón pausa, o abre la pregunta para cerrar el juego) y tienes Steam abierto: Steam convierte los botones de un control de Xbox en teclas (A en Enter, B en Escape, según su "disposición de escritorio") y el juego recibe las dos cosas. Para evitarlo, cierra Steam mientras juegas, o en Steam: Parámetros, Control, Disposición de escritorio, Editar, y "Desactivar Steam Input".
+
 El lector de pantalla funciona con NVDA y con JAWS; sin ellos usa la voz de Windows. Habla gracias a Prism (licencia MPL-2.0; su código está en https://github.com/ethindp/prism; sus licencias, en licenses/prism). El idioma es el de Windows; para elegir otro, escribe a11y_lang="es" (o el código que quieras) en bt3_settings.txt.
