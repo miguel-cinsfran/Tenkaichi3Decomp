@@ -411,6 +411,22 @@ static struct { SDL_JoystickID id; SDL_Gamepad *pad; } sOpen[MAX_PADS];
 static SDL_JoystickID sIds[MAX_PADS];
 static int sIdCount, sInit;
 
+/* A controller opened: what SDL knows of it, in the log (and the reader's, a11y_log=1), for a report of buttons that
+   do not do what they say: its name, the type its buttons are named by, maker and model, and the mapping SDL reads its
+   buttons through (a controller of an unusual make can be mapped wrongly, every button then another one). */
+static void pad_note(SDL_Gamepad *g) {
+    extern void PortA11y_Note(const char *text); /* a11y.c */
+    char line[1024];
+    char *map = SDL_GetGamepadMapping(g);
+    const char *name = SDL_GetGamepadName(g), *type = SDL_GetGamepadStringForType(SDL_GetGamepadType(g));
+
+    snprintf(line, sizeof(line), "controller: \"%s\", type %s, %04x:%04x, mapping %s", name != NULL ? name : "?",
+             type != NULL ? type : "unknown", SDL_GetGamepadVendor(g), SDL_GetGamepadProduct(g), map != NULL ? map : "none");
+    SDL_free(map);
+    fprintf(stderr, "bt3: %s\n", line);
+    PortA11y_Note(line);
+}
+
 static void pads_refresh(void) {
     static unsigned calls;
     SDL_JoystickID *ids;
@@ -446,6 +462,9 @@ static void pads_refresh(void) {
             if (k < MAX_PADS) {
                 sOpen[k].id = sIds[i];
                 sOpen[k].pad = SDL_OpenGamepad(sIds[i]);
+                if (sOpen[k].pad != NULL) {
+                    pad_note(sOpen[k].pad);
+                }
             }
         }
     }

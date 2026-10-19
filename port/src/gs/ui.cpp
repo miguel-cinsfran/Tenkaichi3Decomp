@@ -96,6 +96,7 @@ static bool sNet;                              // the open window is the online 
 static int sForceTab = -1;                     // BT3_UI_OPEN=<tab>: open at start on that tab (testing)
 static int sCapKind, sCapPlayer, sCapAction;   // waiting for a key (1) or a controller button (2) to bind
 static Uint64 sCapUntil;                       // ... until then: a controller has no button that is not a binding, so the wait ends by itself
+static Uint64 sCapFrom;                        // ... from then (SDL_GetTicksNS): a controller's press from before is not the binding
 static bool sQuit;                             // the question before the game closes is up
 static bool sQuitNo;                           // ... and Esc answered it: no
 static bool sPadHold;                          // the controller does not work the window: a binding is waited for, or its button is still down
@@ -577,6 +578,7 @@ static void set_open(bool open) {
 static void capture(int kind, int player, int action) {
     sCapKind = kind; sCapPlayer = player; sCapAction = action; gPortInputCapture = 1;
     sCapUntil = SDL_GetTicks() + 5000;
+    sCapFrom = SDL_GetTicksNS();
     sPadHold = true;
 }
 
@@ -1056,6 +1058,26 @@ static void bind(int value) {
     PortInput_Save();
 }
 
+static const char *pad_source_name(int src);
+extern "C" void PortA11y_Note(const char *text);
+
+// A binding taken, in the log (and the reader's, a11y_log=1), with the controller it was pressed on (`pad`, an SDL
+// id; -1: a key): for a report of a button that does not do what it was set to (gs_input.c logs each controller's
+// mapping as it is opened).
+static void bound_note(int pad, int value) {
+    char line[256];
+    const char *what = sCapAction < PORT_ACTIONS ? PortInput_ActionLabel(sCapAction) : sCapAction == PORT_ACTIONS ? "Open this window" : "Open online chat";
+    const char *name = pad < 0 ? NULL : SDL_GetGamepadNameForID((SDL_JoystickID)pad);
+    if (pad < 0) {
+        snprintf(line, sizeof(line), "controls: player %d, %s: key %s (%d)", sCapPlayer + 1, what, SDL_GetScancodeName((SDL_Scancode)value), value);
+    } else {
+        snprintf(line, sizeof(line), "controls: player %d, %s: %s (%d), pressed on \"%s\"", sCapPlayer + 1, what, pad_source_name(value), value,
+                 name != NULL ? name : "?");
+    }
+    fprintf(stderr, "bt3: %s\n", line);
+    PortA11y_Note(line);
+}
+
 static bool chat_can_open(void) {
     return sReady && !sOpen && !sQuit && PortChat_Enabled() && Port_NetActive();
 }
@@ -1157,20 +1179,38 @@ int Ui_Event(const SDL_Event *ev) {
     }
     if (sCapKind != 0) { // the next key or button is the binding; Esc leaves it as it was, Delete clears it
         bool done = false;
-        if (ev->type == SDL_EVENT_KEY_DOWN) {
+        // A controller's press from before the wait began is not the binding: the row was chosen with the controller
+        // from the state of its buttons, and the event of that press (Cross / A) can come in a round later, when the
+        // events were pumped in between (Low input lag: plat_stub.c, PortInput_Fresh); it was taken as the new binding.
+        bool old = (ev->type == SDL_EVENT_GAMEPAD_BUTTON_DOWN || ev->type == SDL_EVENT_GAMEPAD_AXIS_MOTION) && ev->common.timestamp < sCapFrom;
+        if (ev->type == SDL_EVENT_KEY_DOWN && (ev->key.repeat || ev->key.scancode == SDL_SCANCODE_UNKNOWN)) {
+            // (the key that chose the row, still held; a key of no code, which no row can hold: Windows gives some
+            // presses that are not a keyboard's to the window so)
+        } else if (ev->type == SDL_EVENT_KEY_DOWN) {
             if (ev->key.scancode == SDL_SCANCODE_DELETE || ev->key.scancode == SDL_SCANCODE_BACKSPACE) {
                 bind(sCapKind == 1 ? 0 : -1);
             } else if (ev->key.scancode != SDL_SCANCODE_ESCAPE && sCapKind == 1) {
                 bind((int)ev->key.scancode);
+                bound_note(-1, (int)ev->key.scancode);
             }
             done = ev->key.scancode == SDL_SCANCODE_ESCAPE || ev->key.scancode == SDL_SCANCODE_DELETE ||
                    ev->key.scancode == SDL_SCANCODE_BACKSPACE || sCapKind == 1;
+        } else if (old) {
+        } else if (sCapKind == 1 && ev->type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
+            // A key is awaited and a controller's button is pressed: the keyboard's cell, the first of each row, was
+            // chosen with the controller. The key stays as it was (the wait had no end, and the next key touched,
+            // whichever, became the binding), and the press is not also the window's (sPadHold: it would choose the
+            // cell again).
+            sPadHold = true;
+            done = true;
         } else if (sCapKind == 2 && ev->type == SDL_EVENT_GAMEPAD_BUTTON_DOWN) {
             bind((int)ev->gbutton.button);
+            bound_note((int)ev->gbutton.which, (int)ev->gbutton.button);
             done = true;
         } else if (sCapKind == 2 && ev->type == SDL_EVENT_GAMEPAD_AXIS_MOTION && ev->gaxis.value > 20000 &&
                    (ev->gaxis.axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER || ev->gaxis.axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER)) {
             bind(ev->gaxis.axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER ? PORT_PAD_LT : PORT_PAD_RT);
+            bound_note((int)ev->gaxis.which, ev->gaxis.axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER ? PORT_PAD_LT : PORT_PAD_RT);
             done = true;
         }
         if (done) {
